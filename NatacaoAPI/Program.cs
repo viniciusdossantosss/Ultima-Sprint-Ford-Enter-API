@@ -35,7 +35,10 @@ builder.Services.AddScoped<IReservaService, ReservaService>();
 // ══════════════════════════════════════════════════════════════════
 // 3. AUTOMAPPER — Escaneia todos os Profiles do assembly automaticamente
 // ══════════════════════════════════════════════════════════════════
-builder.Services.AddAutoMapper(typeof(Program).Assembly);
+builder.Services.AddAutoMapper(cfg => 
+{
+    cfg.LicenseKey = "eyJhbGciOiJSUzI1NiIsImtpZCI6Ikx1Y2t5UGVubnlTb2Z0d2FyZUxpY2Vuc2VLZXkvYmJiMTNhY2I1OTkwNGQ4OWI0Y2IxYzg1ZjA4OGNjZjkiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2x1Y2t5cGVubnlzb2Z0d2FyZS5jb20iLCJhdWQiOiJMdWNreVBlbm55U29mdHdhcmUiLCJleHAiOiIxODA4Njk3NjAwIiwiaWF0IjoiMTc3NzIzMTE2MSIsImFjY291bnRfaWQiOiIwMTlkY2IzYWU5NTI3ZDk4YTA5MWJkZmIzYzc2ZDBjZSIsImN1c3RvbWVyX2lkIjoiY3RtXzAxa3E1a3B0N2VjOHBkZGNqbWQ5aHYwN3ZmIiwic3ViX2lkIjoiLSIsImVkaXRpb24iOiIwIiwidHlwZSI6IjIifQ.WUc5NBu39ZbF2a2inQjF1wbaRSVX9u5o8R6zlXomLxa3CvS-gLp6O_J3b64PDiFpvTXJMeW-XW2Gvrg6YO9-_a7CpBO8jOWucFpp1e8_fnqE3aIpf-XC5LEeMCRKtJBCxOb2RrkFklFpfrZY9EfQLjsFO6QSR5mt9wnlFDkouV72g_DuC4ktbgfJIPk5eOlYASKiDx3SNY31oJAvoIwa86x027RyTznvy6LQ_gtiiMbNJxCtoCQK26EUH6xdbOj_EF1quxaCD3shos0ZnUuu1oRbm6rlVbtpu0xKcyhq8AUGevBp1hkMxxIXuPCCN6In14gMX3QQoUIBzJCGb-A-Dw";
+}, AppDomain.CurrentDomain.GetAssemblies());
 
 // ══════════════════════════════════════════════════════════════════
 // 4. AUTENTICAÇÃO JWT

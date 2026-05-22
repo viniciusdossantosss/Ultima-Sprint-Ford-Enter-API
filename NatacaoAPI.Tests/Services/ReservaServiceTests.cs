@@ -4,6 +4,7 @@ using NatacaoAPI.DTOs.Reserva;
 using NatacaoAPI.Models;
 using NatacaoAPI.Repositories.Interfaces;
 using NatacaoAPI.Services;
+using Xunit;
 
 namespace NatacaoAPI.Tests.Services
 {

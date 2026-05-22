@@ -4,6 +4,7 @@ using NatacaoAPI.DTOs.Turma;
 using NatacaoAPI.Models;
 using NatacaoAPI.Repositories.Interfaces;
 using NatacaoAPI.Services;
+using Xunit; // Adicionado using para Xunit
 
 namespace NatacaoAPI.Tests.Services
 {

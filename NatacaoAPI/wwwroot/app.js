@@ -94,8 +94,10 @@ async function handleRegister(e) {
 function logout() {
     currentUser = null;
     localStorage.removeItem('aquaUser');
-    document.getElementById('authSection').style.display = '';
-    document.getElementById('dashboardSection').style.display = 'none';
+    document.getElementById('authSection').classList.remove('d-none');
+    document.getElementById('authSection').classList.add('d-flex');
+    document.getElementById('dashboardSection').classList.add('d-none');
+    document.getElementById('dashboardSection').classList.remove('d-flex');
     document.getElementById('navUserArea').style.display = 'none !important';
     document.getElementById('navUserArea').classList.add('d-none');
     document.getElementById('loginForm').reset();
@@ -107,8 +109,9 @@ function logout() {
 // ═══════════════════════════════════════════════════════════════
 
 function showDashboard() {
-    document.getElementById('authSection').style.display = 'none';
-    document.getElementById('dashboardSection').style.display = '';
+    document.getElementById('authSection').hidden = false;
+    document.getElementById('dashboardSection').hidden = true;
+
 
     // Nav user area
     const navArea = document.getElementById('navUserArea');
