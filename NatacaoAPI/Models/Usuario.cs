@@ -9,12 +9,13 @@ namespace NatacaoAPI.Models
     public enum UsuarioRole
     {
         Aluno = 0,
-        Professor = 1
+        Professor = 1,
+        Admin = 2
     }
 
     /// <summary>
     /// Entidade rica de domínio representando um usuário do sistema.
-    /// Um usuário pode ser Aluno (faz reservas) ou Professor (gerencia turmas).
+    /// Um usuário pode ser Aluno (faz reservas), Professor (gerencia turmas) ou Admin (gerencia usuários).
     /// </summary>
     public class Usuario
     {
@@ -41,7 +42,16 @@ namespace NatacaoAPI.Models
 
         public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
 
-        // ─── Navegação ───────────────────────────────────────────────
+        // ─── Account Lockout ────────────────────────────────────────
+        public int TentativasLoginFalhas { get; set; } = 0;
+        public bool ContaBloqueada { get; set; } = false;
+        public DateTime? BloqueioAte { get; set; }
+
+        // ─── Password Reset ─────────────────────────────────────────
+        public string? ResetToken { get; set; }
+        public DateTime? ResetTokenExpiry { get; set; }
+
+        // ─── Navegação ──────────────────────────────────────────────
         // Turmas que este usuário leciona (quando Role == Professor)
         public ICollection<Turma> TurmasLecionadas { get; set; } = new List<Turma>();
 

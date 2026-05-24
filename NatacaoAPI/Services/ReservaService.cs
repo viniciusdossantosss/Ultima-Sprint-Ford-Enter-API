@@ -1,4 +1,5 @@
-using AutoMapper;
+using Mapster;
+using MapsterMapper;
 using NatacaoAPI.DTOs.Reserva;
 using NatacaoAPI.Models;
 using NatacaoAPI.Repositories.Interfaces;
@@ -87,7 +88,7 @@ namespace NatacaoAPI.Services
 
             // Recarregar com Includes para o mapeamento
             var fullReserva = await _reservaRepository.GetByIdAsync(created.Id);
-            return _mapper.Map<ReservaResponseDTO>(fullReserva);
+            return _mapper.Map<ReservaResponseDTO>(fullReserva!);
         }
 
         public async Task<bool> CancelAsync(int id, int alunoId)

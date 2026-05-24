@@ -10,63 +10,83 @@ using NatacaoAPI.Services.Interfaces;
 namespace NatacaoAPI.Services
 {
     /// <summary>
-    /// Serviço de autenticação responsável por:
-    /// - Registro com hash BCrypt da senha
+    /// Serviço de autenticação com:
     /// - Login com verificação BCrypt + geração de JWT
+    /// - Account lockout após 5 tentativas falhas (15min de bloqueio)
+    /// - Recuperação de senha via email (token com expiração de 30min)
     /// 
-    /// Decisão: o JWT contém claims de Id, Email e Role para que
-    /// o middleware de autorização possa validar perfis sem consultar o banco.
+    /// NOTA: RegisterAsync foi removido. Apenas o Admin pode criar usuários
+    /// via UsuarioService/UsuariosController.
     /// </summary>
     public class AuthService : IAuthService
     {
         private readonly IUsuarioRepository _usuarioRepository;
+        private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<AuthService> _logger;
 
-        public AuthService(IUsuarioRepository usuarioRepository, IConfiguration configuration)
+        private const int MaxLoginAttempts = 5;
+        private const int LockoutMinutes = 15;
+
+        public AuthService(
+            IUsuarioRepository usuarioRepository,
+            IEmailService emailService,
+            IConfiguration configuration,
+            ILogger<AuthService> logger)
         {
             _usuarioRepository = usuarioRepository;
+            _emailService = emailService;
             _configuration = configuration;
-        }
-
-        public async Task<AuthResponseDTO> RegisterAsync(RegisterRequestDTO request)
-        {
-            // Verificar se o e-mail já está em uso
-            if (await _usuarioRepository.EmailExistsAsync(request.Email))
-                throw new InvalidOperationException("Este e-mail já está cadastrado.");
-
-            // Validar role
-            if (!Enum.TryParse<UsuarioRole>(request.Role, true, out var role))
-                throw new ArgumentException("Role inválida. Use 'Aluno' ou 'Professor'.");
-
-            // Criar o usuário com senha hashada via BCrypt
-            var usuario = new Usuario
-            {
-                Nome = request.Nome,
-                Email = request.Email,
-                SenhaHash = BCrypt.Net.BCrypt.HashPassword(request.Senha),
-                Role = role,
-                DataCriacao = DateTime.UtcNow
-            };
-
-            await _usuarioRepository.CreateAsync(usuario);
-
-            // Retornar resposta com token JWT
-            return new AuthResponseDTO
-            {
-                Id = usuario.Id,
-                Nome = usuario.Nome,
-                Email = usuario.Email,
-                Role = usuario.Role.ToString(),
-                Token = GenerateJwtToken(usuario)
-            };
+            _logger = logger;
         }
 
         public async Task<AuthResponseDTO> LoginAsync(LoginRequestDTO request)
         {
             var usuario = await _usuarioRepository.GetByEmailAsync(request.Email);
 
-            if (usuario == null || !BCrypt.Net.BCrypt.Verify(request.Senha, usuario.SenhaHash))
+            if (usuario == null)
                 throw new UnauthorizedAccessException("E-mail ou senha inválidos.");
+
+            // Verificar account lockout
+            if (usuario.ContaBloqueada && usuario.BloqueioAte.HasValue)
+            {
+                if (usuario.BloqueioAte.Value > DateTime.UtcNow)
+                {
+                    var minutosRestantes = (int)(usuario.BloqueioAte.Value - DateTime.UtcNow).TotalMinutes + 1;
+                    throw new InvalidOperationException(
+                        $"Conta bloqueada por excesso de tentativas. Tente novamente em {minutosRestantes} minuto(s).");
+                }
+                // Lockout expirou — resetar
+                usuario.ContaBloqueada = false;
+                usuario.TentativasLoginFalhas = 0;
+                usuario.BloqueioAte = null;
+            }
+
+            // Verificar senha
+            if (!BCrypt.Net.BCrypt.Verify(request.Senha, usuario.SenhaHash))
+            {
+                // Incrementar tentativas falhas
+                usuario.TentativasLoginFalhas++;
+
+                if (usuario.TentativasLoginFalhas >= MaxLoginAttempts)
+                {
+                    usuario.ContaBloqueada = true;
+                    usuario.BloqueioAte = DateTime.UtcNow.AddMinutes(LockoutMinutes);
+                    _logger.LogWarning("Conta bloqueada por excesso de tentativas: {Email}", usuario.Email);
+                }
+
+                await _usuarioRepository.UpdateAsync(usuario);
+                throw new UnauthorizedAccessException("E-mail ou senha inválidos.");
+            }
+
+            // Login bem-sucedido — resetar tentativas
+            if (usuario.TentativasLoginFalhas > 0)
+            {
+                usuario.TentativasLoginFalhas = 0;
+                usuario.ContaBloqueada = false;
+                usuario.BloqueioAte = null;
+                await _usuarioRepository.UpdateAsync(usuario);
+            }
 
             return new AuthResponseDTO
             {
@@ -78,9 +98,55 @@ namespace NatacaoAPI.Services
             };
         }
 
+        public async Task ForgotPasswordAsync(ForgotPasswordDTO request)
+        {
+            var usuario = await _usuarioRepository.GetByEmailAsync(request.Email);
+
+            // SEGURANÇA: sempre retornar sucesso (não revelar se email existe)
+            if (usuario == null)
+            {
+                _logger.LogInformation("Tentativa de recuperação de senha para email inexistente: {Email}", request.Email);
+                return;
+            }
+
+            // Gerar token de reset
+            var resetToken = Guid.NewGuid().ToString("N");
+            usuario.ResetToken = resetToken;
+            usuario.ResetTokenExpiry = DateTime.UtcNow.AddMinutes(30);
+
+            await _usuarioRepository.UpdateAsync(usuario);
+
+            // Enviar email
+            await _emailService.SendPasswordResetEmailAsync(usuario.Email, usuario.Nome, resetToken);
+
+            _logger.LogInformation("Token de recuperação de senha gerado para: {Email}", usuario.Email);
+        }
+
+        public async Task ResetPasswordAsync(ResetPasswordDTO request)
+        {
+            var usuario = await _usuarioRepository.GetByResetTokenAsync(request.Token);
+
+            if (usuario == null)
+                throw new InvalidOperationException("Token de recuperação inválido ou expirado.");
+
+            // Atualizar senha
+            usuario.SenhaHash = BCrypt.Net.BCrypt.HashPassword(request.NovaSenha, workFactor: 12);
+
+            // Limpar token de reset e desbloquear conta
+            usuario.ResetToken = null;
+            usuario.ResetTokenExpiry = null;
+            usuario.ContaBloqueada = false;
+            usuario.TentativasLoginFalhas = 0;
+            usuario.BloqueioAte = null;
+
+            await _usuarioRepository.UpdateAsync(usuario);
+
+            _logger.LogInformation("Senha redefinida com sucesso para: {Email}", usuario.Email);
+        }
+
         /// <summary>
         /// Gera um JWT com claims de identidade e role.
-        /// O token expira em 24 horas para balancear segurança e UX.
+        /// Token expira em 8 horas (reduzido de 24h por segurança).
         /// </summary>
         private string GenerateJwtToken(Usuario usuario)
         {
@@ -101,7 +167,7 @@ namespace NatacaoAPI.Services
                 issuer: jwtSettings["Issuer"],
                 audience: jwtSettings["Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(24),
+                expires: DateTime.UtcNow.AddHours(8),
                 signingCredentials: credentials
             );
 

@@ -1,45 +1,49 @@
 // ═══════════════════════════════════════════════════════════════
-// AquaSchedule — Frontend Application (Multi-page with FullCalendar)
+// AquaSchedule v2 — Frontend Application
 // ═══════════════════════════════════════════════════════════════
 
 const API_BASE = '/api';
-
-// ─── Estado da Aplicação ──────────────────────────────────────
 let currentUser = null;
-let calendar = null; // Objeto do FullCalendar
+let calendarInstance = null;
 
-// ─── Inicialização Baseada na Página ──────────────────────────
+// ─── Page Detection ───────────────────────────────────────────
+const isLoginPage = !document.getElementById('dashboardSection') && document.getElementById('authSection');
+const isDashboardPage = document.getElementById('sectionTurmas') != null;
+
+// ─── Init ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     const saved = localStorage.getItem('aquaUser');
-    if (saved) {
-        currentUser = JSON.parse(saved);
-    }
 
-    const currentPath = window.location.pathname;
-
-    if (currentPath.endsWith('/') || currentPath.endsWith('index.html')) {
-        if (currentUser) {
-            window.location.href = 'dashboard.html';
-        }
-    } 
-    else if (currentPath.endsWith('dashboard.html')) {
-        if (!currentUser) {
-            window.location.href = 'index.html';
+    if (isLoginPage) {
+        // Check for reset token in URL
+        const params = new URLSearchParams(window.location.search);
+        const resetToken = params.get('resetToken');
+        if (resetToken) {
+            showResetPassword(resetToken);
             return;
         }
+        // If already logged in, redirect to dashboard
+        if (saved) {
+            window.location.href = 'dashboard.html';
+        }
+    } else if (isDashboardPage) {
+        if (!saved) {
+            window.location.href = '/';
+            return;
+        }
+        currentUser = JSON.parse(saved);
         initDashboard();
     }
 });
 
 // ═══════════════════════════════════════════════════════════════
-// AUTENTICAÇÃO (Apenas na index.html)
+// AUTH — Login
 // ═══════════════════════════════════════════════════════════════
 
 async function handleLogin(e) {
     e.preventDefault();
     const btn = document.getElementById('btnLogin');
-    btn.disabled = true;
-    btn.innerHTML = '<div class="spinner-wave"><span></span><span></span><span></span><span></span></div>';
+    setBtnLoading(btn, true);
 
     try {
         const res = await fetch(`${API_BASE}/auth/login`, {
@@ -59,108 +63,165 @@ async function handleLogin(e) {
         currentUser = await res.json();
         localStorage.setItem('aquaUser', JSON.stringify(currentUser));
         window.location.href = 'dashboard.html';
-
     } catch (err) {
         showAuthAlert(err.message, 'danger');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Entrar';
+    } finally {
+        setBtnLoading(btn, false);
     }
 }
 
-async function handleRegister(e) {
+// ═══════════════════════════════════════════════════════════════
+// AUTH — Forgot / Reset Password
+// ═══════════════════════════════════════════════════════════════
+
+function showForgotPassword(e) {
+    e?.preventDefault();
+    document.getElementById('loginView').style.display = 'none';
+    document.getElementById('forgotView').style.display = '';
+    document.getElementById('resetView').style.display = 'none';
+    hideAuthAlert();
+}
+
+function showLogin(e) {
+    e?.preventDefault();
+    document.getElementById('loginView').style.display = '';
+    document.getElementById('forgotView').style.display = 'none';
+    document.getElementById('resetView').style.display = 'none';
+    hideAuthAlert();
+}
+
+function showResetPassword(token) {
+    document.getElementById('loginView').style.display = 'none';
+    document.getElementById('forgotView').style.display = 'none';
+    document.getElementById('resetView').style.display = '';
+    document.getElementById('resetView').dataset.token = token;
+}
+
+async function handleForgotPassword(e) {
     e.preventDefault();
-    const btn = document.getElementById('btnRegister');
-    btn.disabled = true;
-    btn.innerHTML = '<div class="spinner-wave"><span></span><span></span><span></span><span></span></div>';
+    const btn = document.getElementById('btnForgotPassword');
+    setBtnLoading(btn, true);
 
     try {
-        const res = await fetch(`${API_BASE}/auth/register`, {
+        await fetch(`${API_BASE}/auth/forgot-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: document.getElementById('forgotEmail').value })
+        });
+        showAuthAlert('Se o e-mail estiver cadastrado, você receberá um link de recuperação. Verifique sua caixa de entrada.', 'success');
+    } catch (err) {
+        showAuthAlert('Erro ao processar a solicitação.', 'danger');
+    } finally {
+        setBtnLoading(btn, false);
+    }
+}
+
+async function handleResetPassword(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnResetPassword');
+    setBtnLoading(btn, true);
+
+    try {
+        const token = document.getElementById('resetView').dataset.token;
+        const res = await fetch(`${API_BASE}/auth/reset-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                nome: document.getElementById('regNome').value,
-                email: document.getElementById('regEmail').value,
-                senha: document.getElementById('regSenha').value,
-                role: document.getElementById('regRole').value
+                token: token,
+                novaSenha: document.getElementById('resetSenha').value
             })
         });
 
         if (!res.ok) {
             const err = await res.json();
-            throw new Error(err.message || 'Erro ao registrar.');
+            throw new Error(err.message || 'Token inválido ou expirado.');
         }
 
-        currentUser = await res.json();
-        localStorage.setItem('aquaUser', JSON.stringify(currentUser));
-        window.location.href = 'dashboard.html';
-
+        showAuthAlert('Senha redefinida com sucesso! Faça login com sua nova senha.', 'success');
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 2000);
     } catch (err) {
         showAuthAlert(err.message, 'danger');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-person-plus me-2"></i>Criar Conta';
+    } finally {
+        setBtnLoading(btn, false);
     }
 }
 
 function logout() {
     currentUser = null;
     localStorage.removeItem('aquaUser');
-    window.location.href = 'index.html';
+    window.location.href = '/';
 }
 
 // ═══════════════════════════════════════════════════════════════
-// DASHBOARD (Apenas na dashboard.html)
+// DASHBOARD
 // ═══════════════════════════════════════════════════════════════
 
 function initDashboard() {
+    // Nav user area
     document.getElementById('navUserName').textContent = currentUser.nome;
-    document.getElementById('navUserRole').textContent = currentUser.role === 'Professor' ? '👨‍🏫 Professor' : '🏊 Aluno';
+    const roleMap = { Admin: '👑 Admin', Professor: '👨‍🏫 Professor', Aluno: '🏊 Aluno' };
+    document.getElementById('navUserRole').textContent = roleMap[currentUser.role] || currentUser.role;
     document.getElementById('statRole').textContent = currentUser.role;
 
+    const isAdmin = currentUser.role === 'Admin';
     const isProfessor = currentUser.role === 'Professor';
+
+    // Role visibility
+    document.querySelectorAll('.admin-only').forEach(el => {
+        el.style.display = isAdmin ? '' : 'none';
+    });
     document.querySelectorAll('.professor-only').forEach(el => {
-        el.style.display = isProfessor ? '' : 'none';
+        el.style.display = (isProfessor || isAdmin) ? '' : 'none';
     });
     document.querySelectorAll('.aluno-only').forEach(el => {
-        el.style.display = isProfessor ? 'none' : '';
+        el.style.display = (!isProfessor && !isAdmin) ? '' : 'none';
     });
 
-    if (isProfessor) {
+    // Labels
+    if (isProfessor || isAdmin) {
         document.getElementById('reservasTitle').textContent = 'Todas as Reservas';
         document.getElementById('statReservasLabel').textContent = 'Total de Reservas';
-    } else {
-        document.getElementById('reservasTitle').textContent = 'Minhas Reservas';
-        document.getElementById('statReservasLabel').textContent = 'Minhas Reservas';
     }
 
+    // Load data
     initCalendar();
     loadReservas();
+    if (isAdmin) loadUsuarios();
+}
+
+// ─── Section Switching ────────────────────────────────────────
+function switchSection(name) {
+    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+
+    const section = document.getElementById('section' + name.charAt(0).toUpperCase() + name.slice(1));
+    if (section) section.classList.add('active');
+
+    const tab = document.querySelector(`.nav-tab[data-section="${name}"]`);
+    if (tab) tab.classList.add('active');
 }
 
 // ═══════════════════════════════════════════════════════════════
-// CALENDÁRIO (FullCalendar)
+// TURMAS — FullCalendar
 // ═══════════════════════════════════════════════════════════════
 
 function initCalendar() {
     const calendarEl = document.getElementById('calendar');
-    calendar = new FullCalendar.Calendar(calendarEl, {
+    calendarInstance = new FullCalendar.Calendar(calendarEl, {
         locale: 'pt-br',
-        initialView: 'timeGridWeek',
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
-        slotMinTime: '06:00:00',
-        slotMaxTime: '22:00:00',
-        allDaySlot: false,
+        initialView: 'dayGridMonth',
+        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' },
+        height: 'auto',
         events: fetchTurmas,
         eventClick: handleEventClick,
         dateClick: handleDateClick
     });
-    calendar.render();
+    calendarInstance.render();
 }
 
-async function fetchTurmas(fetchInfo, successCallback, failureCallback) {
+async function fetchTurmas(info, successCallback) {
     try {
         const res = await apiFetch('/turmas');
         const turmas = await res.json();
@@ -168,79 +229,71 @@ async function fetchTurmas(fetchInfo, successCallback, failureCallback) {
 
         const events = turmas.map(t => ({
             id: t.id,
-            title: t.nome,
+            title: `${t.nome} (${t.vagasDisponiveis}/${t.capacidadeMaxima})`,
             start: t.dataHoraInicio,
             end: t.dataHoraFim,
-            extendedProps: {
-                ...t
-            },
-            // Estilo do evento
             className: t.vagasDisponiveis > 0 ? 'event-vagas' : 'event-lotada',
+            extendedProps: t
         }));
         successCallback(events);
     } catch (err) {
         console.error('Erro ao carregar turmas:', err);
-        showToast('Erro ao carregar turmas.', 'danger');
-        failureCallback(err);
+        successCallback([]);
     }
 }
 
 function handleEventClick(info) {
     const t = info.event.extendedProps;
-    const modalTitle = document.getElementById('eventoModalTitle');
+    const inicio = new Date(t.dataHoraInicio).toLocaleString('pt-BR');
+    const fim = new Date(t.dataHoraFim).toLocaleString('pt-BR');
+    const vagasBadge = t.vagasDisponiveis > 0
+        ? `<span class="badge-vagas disponivel">${t.vagasDisponiveis}/${t.capacidadeMaxima} vagas</span>`
+        : `<span class="badge-vagas lotada">Lotada</span>`;
+
     const modalBody = document.getElementById('eventoModalBody');
-    const modalFooter = document.getElementById('eventoModalFooter');
-
-    modalTitle.textContent = t.nome;
     modalBody.innerHTML = `
-        <p><strong>Modalidade:</strong> ${escapeHtml(t.modalidade)}</p>
-        <p><strong>Professor:</strong> ${escapeHtml(t.professorNome)}</p>
-        <p><strong>Horário:</strong> ${new Date(t.dataHoraInicio).toLocaleString('pt-BR')} - ${new Date(t.dataHoraFim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
-        <p><strong>Vagas:</strong> ${t.vagasDisponiveis} / ${t.capacidadeMaxima}</p>
-        <p class="mt-3">${escapeHtml(t.descricao)}</p>
-    `;
+        <h5 class="fw-700 mb-2">${escapeHtml(t.nome)}</h5>
+        <p class="text-secondary mb-3">${escapeHtml(t.descricao || '')}</p>
+        <div class="d-flex flex-column gap-2">
+            <div><i class="bi bi-tag me-2 text-accent"></i>${escapeHtml(t.modalidade)}</div>
+            <div><i class="bi bi-clock me-2 text-accent"></i>${inicio} → ${fim}</div>
+            <div><i class="bi bi-person me-2 text-accent"></i>${escapeHtml(t.professorNome)}</div>
+            <div><i class="bi bi-people me-2 text-accent"></i>${vagasBadge}</div>
+        </div>`;
 
-    modalFooter.innerHTML = ''; // Limpa botões anteriores
-    if (currentUser.role === 'Professor') {
+    const modalFooter = document.getElementById('eventoModalFooter');
+    modalFooter.innerHTML = '';
+
+    const isProfOrAdmin = currentUser.role === 'Professor' || currentUser.role === 'Admin';
+
+    if (isProfOrAdmin) {
         modalFooter.innerHTML = `
-            <button class="btn btn-outline-warning rounded-pill" onclick="editarTurma(${t.id})">Editar</button>
-            <button class="btn btn-outline-danger rounded-pill" onclick="deletarTurma(${t.id}, '${escapeHtml(t.nome)}')">Deletar</button>
-        `;
-    } else if (t.vagasDisponiveis > 0) {
-        modalFooter.innerHTML = `<button class="btn btn-accent rounded-pill" onclick="criarReserva(${t.id})">Reservar Vaga</button>`;
+            <button class="btn btn-outline-warning btn-sm rounded-pill px-3" onclick="editarTurma(${t.id})">
+                <i class="bi bi-pencil me-1"></i>Editar
+            </button>
+            <button class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="deletarTurma(${t.id}, '${escapeHtml(t.nome)}')">
+                <i class="bi bi-trash me-1"></i>Deletar
+            </button>`;
+    } else if (currentUser.role === 'Aluno' && t.vagasDisponiveis > 0) {
+        modalFooter.innerHTML = `
+            <button class="btn btn-accent btn-sm rounded-pill px-3" onclick="criarReserva(${t.id})">
+                <i class="bi bi-bookmark-plus me-1"></i>Reservar Vaga
+            </button>`;
     }
 
+    document.getElementById('eventoModalTitle').textContent = t.nome;
     new bootstrap.Modal(document.getElementById('eventoModal')).show();
 }
 
 function handleDateClick(info) {
-    if (currentUser.role !== 'Professor') return;
-
-    // Abre o modal de criação de turma, pré-preenchendo a data/hora
-    document.getElementById('turmaForm').reset();
+    if (currentUser.role !== 'Professor' && currentUser.role !== 'Admin') return;
     document.getElementById('turmaId').value = '';
+    document.getElementById('turmaForm').reset();
+    document.getElementById('turmaInicio').value = info.dateStr + 'T08:00';
+    document.getElementById('turmaFim').value = info.dateStr + 'T09:00';
     document.getElementById('turmaModalLabel').innerHTML = '<i class="bi bi-water me-2 text-accent"></i>Nova Turma';
-    
-    // Formata a data para o input datetime-local (YYYY-MM-DDTHH:mm)
-    // Subtrai o offset do fuso horário para manter a hora local correta
-    const offset = info.date.getTimezoneOffset() * 60000;
-    const localDate = new Date(info.date.getTime() - offset);
-    
-    const dataInicioStr = localDate.toISOString().substring(0, 16);
-    
-    // Fim é início + 1 hora
-    localDate.setHours(localDate.getHours() + 1);
-    const dataFimStr = localDate.toISOString().substring(0, 16);
-
-    document.getElementById('turmaInicio').value = dataInicioStr;
-    document.getElementById('turmaFim').value = dataFimStr;
-
     new bootstrap.Modal(document.getElementById('turmaModal')).show();
 }
-
-// ═══════════════════════════════════════════════════════════════
-// TURMAS — CRUD (agora via Modals)
-// ═══════════════════════════════════════════════════════════════
 
 async function handleTurmaSubmit(e) {
     e.preventDefault();
@@ -268,8 +321,8 @@ async function handleTurmaSubmit(e) {
 
         bootstrap.Modal.getInstance(document.getElementById('turmaModal')).hide();
         showToast(isEdit ? 'Turma atualizada! ✅' : 'Turma criada! ✅', 'success');
-        calendar.refetchEvents(); // Recarrega os eventos no calendário
-        loadReservas(); // Atualiza a lista de reservas
+        calendarInstance.refetchEvents();
+        loadReservas();
     } catch (err) {
         showToast(err.message, 'danger');
     }
@@ -277,55 +330,43 @@ async function handleTurmaSubmit(e) {
 
 async function editarTurma(id) {
     try {
-        // Fecha o modal de detalhes primeiro
-        const eventoModal = bootstrap.Modal.getInstance(document.getElementById('eventoModal'));
-        if (eventoModal) eventoModal.hide();
-
+        bootstrap.Modal.getInstance(document.getElementById('eventoModal'))?.hide();
         const res = await apiFetch(`/turmas/${id}`);
         const t = await res.json();
 
         document.getElementById('turmaId').value = t.id;
         document.getElementById('turmaNome').value = t.nome;
-        document.getElementById('turmaDescricao').value = t.descricao;
+        document.getElementById('turmaDescricao').value = t.descricao || '';
         document.getElementById('turmaModalidade').value = t.modalidade;
+        document.getElementById('turmaInicio').value = t.dataHoraInicio?.substring(0, 16);
+        document.getElementById('turmaFim').value = t.dataHoraFim?.substring(0, 16);
         document.getElementById('turmaCapacidade').value = t.capacidadeMaxima;
         document.getElementById('turmaModalLabel').innerHTML = '<i class="bi bi-pencil me-2 text-accent"></i>Editar Turma';
 
-        // Formata as datas para o input datetime-local, ajustando o fuso horário
-        const inicioDate = new Date(t.dataHoraInicio);
-        const inicioOffset = inicioDate.getTimezoneOffset() * 60000;
-        document.getElementById('turmaInicio').value = new Date(inicioDate.getTime() - inicioOffset).toISOString().substring(0, 16);
-
-        const fimDate = new Date(t.dataHoraFim);
-        const fimOffset = fimDate.getTimezoneOffset() * 60000;
-        document.getElementById('turmaFim').value = new Date(fimDate.getTime() - fimOffset).toISOString().substring(0, 16);
-
         new bootstrap.Modal(document.getElementById('turmaModal')).show();
     } catch (err) {
-        showToast('Erro ao carregar turma para edição.', 'danger');
+        showToast('Erro ao carregar turma.', 'danger');
     }
 }
 
 async function deletarTurma(id, nome) {
-    if (!confirm(`Tem certeza que deseja deletar a turma "${nome}"?`)) return;
+    bootstrap.Modal.getInstance(document.getElementById('eventoModal'))?.hide();
+    if (!confirm(`Tem certeza que deseja deletar "${nome}"?`)) return;
 
     try {
         const res = await apiFetch(`/turmas/${id}`, { method: 'DELETE' });
-        if (!res.ok && res.status !== 204) {
-            const err = await res.json();
-            throw new Error(err.message || 'Erro ao deletar turma.');
-        }
-        
-        const eventoModal = bootstrap.Modal.getInstance(document.getElementById('eventoModal'));
-        if (eventoModal) eventoModal.hide();
-
+        if (!res.ok && res.status !== 204) throw new Error('Erro ao deletar.');
         showToast('Turma deletada. 🗑️', 'warning');
-        calendar.refetchEvents();
+        calendarInstance.refetchEvents();
         loadReservas();
-    } catch (err) {
-        showToast(err.message, 'danger');
-    }
+    } catch (err) { showToast(err.message, 'danger'); }
 }
+
+document.getElementById('turmaModal')?.addEventListener('hidden.bs.modal', () => {
+    document.getElementById('turmaForm').reset();
+    document.getElementById('turmaId').value = '';
+    document.getElementById('turmaModalLabel').innerHTML = '<i class="bi bi-water me-2 text-accent"></i>Nova Turma';
+});
 
 // ═══════════════════════════════════════════════════════════════
 // RESERVAS
@@ -340,26 +381,21 @@ async function loadReservas() {
         document.getElementById('statReservas').textContent = ativas.length;
 
         const tbody = document.getElementById('reservasBody');
+        const isProfOrAdmin = currentUser.role === 'Professor' || currentUser.role === 'Admin';
+
         if (reservas.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-secondary">
+            tbody.innerHTML = `<tr><td colspan="${isProfOrAdmin ? 6 : 5}" class="text-center py-4 text-secondary">
                 <i class="bi bi-bookmark fs-3 d-block mb-2"></i>Nenhuma reserva encontrada.</td></tr>`;
             return;
         }
 
-        const isProfessor = currentUser.role === 'Professor';
-
-        // Previne header duplicado
+        // Add Aluno column header for professor/admin
         const thead = document.querySelector('#reservasTable thead tr');
-        const existingCol = thead.querySelector('.col-aluno');
-        if (isProfessor) {
-             if (!existingCol) {
-                 const th = document.createElement('th');
-                 th.textContent = 'Aluno';
-                 th.className = 'col-aluno';
-                 thead.insertBefore(th, thead.children[1]);
-             }
-        } else {
-             if(existingCol) existingCol.remove();
+        if (isProfOrAdmin && !thead.querySelector('.col-aluno')) {
+            const th = document.createElement('th');
+            th.textContent = 'Aluno';
+            th.className = 'col-aluno';
+            thead.insertBefore(th, thead.children[1]);
         }
 
         tbody.innerHTML = reservas.map(r => {
@@ -367,123 +403,182 @@ async function loadReservas() {
                 ? '<span class="badge-status ativa">● Ativa</span>'
                 : '<span class="badge-status cancelada">● Cancelada</span>';
 
-            const dataReservaFormatted = new Date(r.dataReserva).toLocaleDateString('pt-BR');
-            const dataAulaFormatted = new Date(r.dataHoraInicio).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+            const dataReserva = new Date(r.dataReserva).toLocaleDateString('pt-BR');
+            const inicio = new Date(r.dataHoraInicio).toLocaleString('pt-BR');
+
+            const alunoCol = isProfOrAdmin ? `<td>${escapeHtml(r.alunoNome)}</td>` : '';
 
             let actions = '';
-            if (!isProfessor && r.status === 'Ativa') {
-                actions = `<button class="btn-action cancelar" onclick="cancelarReserva(${r.id})" title="Cancelar reserva">
-                    <i class="bi bi-x-circle"></i>
-                </button>`;
+            if (currentUser.role === 'Aluno' && r.status === 'Ativa') {
+                actions = `<button class="btn-action cancelar" onclick="cancelarReserva(${r.id})" title="Cancelar">
+                    <i class="bi bi-x-circle"></i></button>`;
             }
 
-            const alunoCol = isProfessor ? `<td>${escapeHtml(r.alunoNome)}</td>` : '';
-
             return `<tr>
-                <td class="ps-4 fw-600">${escapeHtml(r.turmaNome)}</td>
+                <td class="fw-600">${escapeHtml(r.turmaNome)}</td>
                 ${alunoCol}
-                <td>${dataAulaFormatted}</td>
-                <td>${dataReservaFormatted}</td>
+                <td>${inicio}</td>
+                <td>${dataReserva}</td>
                 <td>${statusBadge}</td>
-                <td class="text-end pe-4 aluno-only">${actions}</td>
+                <td class="text-end aluno-only">${actions}</td>
             </tr>`;
         }).join('');
-    } catch (err) {
-        console.error('Erro ao carregar reservas:', err);
-        showToast('Erro ao carregar reservas.', 'danger');
-    }
+    } catch (err) { showToast('Erro ao carregar reservas.', 'danger'); }
 }
 
 async function criarReserva(turmaId) {
+    bootstrap.Modal.getInstance(document.getElementById('eventoModal'))?.hide();
     if (!confirm('Deseja reservar uma vaga nesta turma?')) return;
 
     try {
-        const res = await apiFetch('/reservas', {
+        const res = await apiFetch('/reservas', { method: 'POST', body: JSON.stringify({ turmaId }) });
+        if (!res.ok) { const err = await res.json(); throw new Error(err.message); }
+        showToast('Reserva realizada! 🎉', 'success');
+        calendarInstance.refetchEvents();
+        loadReservas();
+    } catch (err) { showToast(err.message, 'danger'); }
+}
+
+async function cancelarReserva(id) {
+    if (!confirm('Cancelar esta reserva?')) return;
+    try {
+        const res = await apiFetch(`/reservas/${id}`, { method: 'DELETE' });
+        if (!res.ok && res.status !== 204) throw new Error('Erro ao cancelar.');
+        showToast('Reserva cancelada. 🗑️', 'warning');
+        calendarInstance.refetchEvents();
+        loadReservas();
+    } catch (err) { showToast(err.message, 'danger'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// USUARIOS — Admin Only
+// ═══════════════════════════════════════════════════════════════
+
+async function loadUsuarios() {
+    try {
+        const res = await apiFetch('/usuarios');
+        const usuarios = await res.json();
+
+        const alunos = usuarios.filter(u => u.role === 'Aluno');
+        const profs = usuarios.filter(u => u.role === 'Professor');
+        const elAlunos = document.getElementById('statAlunos');
+        const elProfs = document.getElementById('statProfessores');
+        if (elAlunos) elAlunos.textContent = alunos.length;
+        if (elProfs) elProfs.textContent = profs.length;
+
+        const tbody = document.getElementById('usuariosBody');
+        if (usuarios.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-secondary">Nenhum usuário cadastrado.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = usuarios.map(u => {
+            const roleBadge = `<span class="badge-role ${u.role.toLowerCase()}">${u.role}</span>`;
+            const data = new Date(u.dataCriacao).toLocaleDateString('pt-BR');
+            const deleteBtn = u.role !== 'Admin'
+                ? `<button class="btn-action deletar" onclick="deleteUsuario(${u.id}, '${escapeHtml(u.nome)}')" title="Excluir">
+                    <i class="bi bi-trash"></i></button>`
+                : '<span class="text-muted" title="Admin não pode ser excluído"><i class="bi bi-shield-lock"></i></span>';
+
+            return `<tr>
+                <td class="fw-600">${escapeHtml(u.nome)}</td>
+                <td>${escapeHtml(u.email)}</td>
+                <td>${roleBadge}</td>
+                <td>${data}</td>
+                <td class="text-end">${deleteBtn}</td>
+            </tr>`;
+        }).join('');
+    } catch (err) { showToast('Erro ao carregar usuários.', 'danger'); }
+}
+
+async function handleCreateUsuario(e) {
+    e.preventDefault();
+    try {
+        const res = await apiFetch('/usuarios', {
             method: 'POST',
-            body: JSON.stringify({ turmaId })
+            body: JSON.stringify({
+                nome: document.getElementById('usuarioNome').value,
+                email: document.getElementById('usuarioEmail').value,
+                senha: document.getElementById('usuarioSenha').value,
+                role: document.getElementById('usuarioRole').value
+            })
         });
 
         if (!res.ok) {
             const err = await res.json();
-            throw new Error(err.message || 'Erro ao criar reserva.');
+            throw new Error(err.message || 'Erro ao criar usuário.');
         }
 
-        const eventoModal = bootstrap.Modal.getInstance(document.getElementById('eventoModal'));
-        if (eventoModal) eventoModal.hide();
-
-        showToast('Reserva realizada com sucesso! 🎉', 'success');
-        calendar.refetchEvents();
-        loadReservas();
-    } catch (err) {
-        showToast(err.message, 'danger');
-    }
+        bootstrap.Modal.getInstance(document.getElementById('usuarioModal')).hide();
+        document.getElementById('usuarioForm').reset();
+        showToast('Usuário cadastrado! Email de boas-vindas enviado. 📧', 'success');
+        loadUsuarios();
+    } catch (err) { showToast(err.message, 'danger'); }
 }
 
-async function cancelarReserva(id) {
-    if (!confirm('Tem certeza que deseja cancelar esta reserva?')) return;
-
+async function deleteUsuario(id, nome) {
+    if (!confirm(`Excluir o usuário "${nome}"?`)) return;
     try {
-        const res = await apiFetch(`/reservas/${id}`, { method: 'DELETE' });
-        if (!res.ok && res.status !== 204) {
-            const err = await res.json();
-            throw new Error(err.message || 'Erro ao cancelar reserva.');
-        }
-
-        showToast('Reserva cancelada. 🗑️', 'warning');
-        calendar.refetchEvents();
-        loadReservas();
-    } catch (err) {
-        showToast(err.message, 'danger');
-    }
+        const res = await apiFetch(`/usuarios/${id}`, { method: 'DELETE' });
+        if (!res.ok && res.status !== 204) throw new Error('Erro ao excluir.');
+        showToast('Usuário excluído. 🗑️', 'warning');
+        loadUsuarios();
+    } catch (err) { showToast(err.message, 'danger'); }
 }
 
 // ═══════════════════════════════════════════════════════════════
-// UTILIDADES
+// UTILITIES
 // ═══════════════════════════════════════════════════════════════
 
 async function apiFetch(path, options = {}) {
-    const headers = {
-        'Content-Type': 'application/json',
-        ...options.headers
-    };
-
-    if (currentUser?.token) {
-        headers['Authorization'] = `Bearer ${currentUser.token}`;
-    }
+    const headers = { 'Content-Type': 'application/json', ...options.headers };
+    if (currentUser?.token) headers['Authorization'] = `Bearer ${currentUser.token}`;
 
     const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
 
     if (res.status === 401) {
+        showToast('Sessão expirada. Faça login novamente.', 'warning');
         logout();
         throw new Error('Sessão expirada.');
     }
-
     if (res.status === 403) {
-        showToast('Você não tem permissão para esta ação.', 'danger');
+        showToast('Sem permissão para esta ação.', 'danger');
         throw new Error('Permissão negada.');
     }
-
     return res;
 }
 
 function showAuthAlert(message, type) {
     const alert = document.getElementById('authAlert');
-    if(alert) {
-        alert.style.display = '';
-        alert.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show rounded-pill py-2 px-3" role="alert">
-            <small>${escapeHtml(message)}</small>
-            <button type="button" class="btn-close btn-close-white btn-sm" data-bs-dismiss="alert"></button>
-        </div>`;
-    }
+    if (!alert) return;
+    alert.style.display = '';
+    const bgClass = type === 'success'
+        ? 'background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: #34d399;'
+        : 'background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5;';
+    alert.innerHTML = `<div class="alert mb-0" style="${bgClass} border-radius: 10px; font-size: 0.85rem; padding: 12px 16px;">
+        ${escapeHtml(message)}</div>`;
+}
+
+function hideAuthAlert() {
+    const alert = document.getElementById('authAlert');
+    if (alert) alert.style.display = 'none';
 }
 
 function showToast(message, type = 'success') {
     const toast = document.getElementById('appToast');
-    if (toast) {
-        toast.className = `toast align-items-center border-0 bg-${type}-toast text-white`;
-        document.getElementById('toastMessage').textContent = message;
-        bootstrap.Toast.getOrCreateInstance(toast, { delay: 4000 }).show();
-    }
+    if (!toast) return;
+    toast.className = `toast align-items-center border-0 bg-${type}-toast text-white`;
+    document.getElementById('toastMessage').textContent = message;
+    bootstrap.Toast.getOrCreateInstance(toast, { delay: 4000 }).show();
+}
+
+function setBtnLoading(btn, loading) {
+    if (!btn) return;
+    const text = btn.querySelector('.btn-text');
+    const loader = btn.querySelector('.btn-loader');
+    if (text) text.style.display = loading ? 'none' : '';
+    if (loader) loader.style.display = loading ? '' : 'none';
+    btn.disabled = loading;
 }
 
 function escapeHtml(text) {

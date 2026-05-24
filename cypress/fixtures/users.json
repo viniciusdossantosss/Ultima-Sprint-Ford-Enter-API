@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "email": "admin@natacao.com",
+    "senha": "Admin@123"
+  },
+  "professor": {
+    "nome": "Professor Teste",
+    "email": "professor@natacao.com",
+    "senha": "Prof@123!",
+    "role": "Professor"
+  },
+  "aluno": {
+    "nome": "Aluno Teste",
+    "email": "aluno@natacao.com",
+    "senha": "Aluno@123!",
+    "role": "Aluno"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "natacao-api-tests",
+  "version": "1.0.0",
+  "description": "E2E tests for AquaSchedule - Swimming Lesson Management System",
+  "scripts": {
+    "cy:open": "cypress open",
+    "cy:run": "cypress run",
+    "test:e2e": "cypress run --browser chrome",
+    "test:headed": "cypress run --headed --browser chrome"
+  },
+  "devDependencies": {
+    "cypress": "^13.15.0"
+  }
+}

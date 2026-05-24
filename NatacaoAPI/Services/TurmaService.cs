@@ -1,4 +1,5 @@
-using AutoMapper;
+using Mapster;
+using MapsterMapper;
 using NatacaoAPI.DTOs.Turma;
 using NatacaoAPI.Models;
 using NatacaoAPI.Repositories.Interfaces;
@@ -62,7 +63,7 @@ namespace NatacaoAPI.Services
 
             // Recarregar com Include do Professor para o mapeamento
             var fullTurma = await _turmaRepository.GetByIdAsync(created.Id);
-            var dto = _mapper.Map<TurmaResponseDTO>(fullTurma);
+            var dto = _mapper.Map<TurmaResponseDTO>(fullTurma!);
             dto.VagasDisponiveis = fullTurma!.CapacidadeMaxima;
             return dto;
         }
@@ -71,6 +72,10 @@ namespace NatacaoAPI.Services
         {
             var turma = await _turmaRepository.GetByIdAsync(id);
             if (turma == null) return null;
+
+            // Validar ownership — Professor só pode editar suas próprias turmas
+            if (turma.ProfessorId != professorId)
+                throw new UnauthorizedAccessException("Você não tem permissão para editar esta turma.");
 
             // Atualizar campos mantendo Id e ProfessorId
             turma.Nome = updateDto.Nome;
@@ -92,6 +97,10 @@ namespace NatacaoAPI.Services
         {
             var turma = await _turmaRepository.GetByIdAsync(id);
             if (turma == null) return false;
+
+            // Validar ownership — Professor só pode deletar suas próprias turmas
+            if (turma.ProfessorId != professorId)
+                throw new UnauthorizedAccessException("Você não tem permissão para deletar esta turma.");
 
             await _turmaRepository.DeleteAsync(turma);
             return true;

@@ -1,10 +1,12 @@
 using System.Text;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using NatacaoAPI.Data;
 using NatacaoAPI.Middleware;
+using NatacaoAPI.Models;
 using NatacaoAPI.Repositories;
 using NatacaoAPI.Repositories.Interfaces;
 using NatacaoAPI.Services;
@@ -31,18 +33,16 @@ builder.Services.AddScoped<IReservaRepository, ReservaRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITurmaService, TurmaService>();
 builder.Services.AddScoped<IReservaService, ReservaService>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // ══════════════════════════════════════════════════════════════════
-// 3. AUTOMAPPER — Escaneia todos os Profiles do assembly automaticamente
+// 3. MAPSTER — Configuração de mapeamento (substitui AutoMapper vulnerável)
+//    CVE-2026-32933: DoS via recursão descontrolada no AutoMapper 13.0.1
 // ══════════════════════════════════════════════════════════════════
-builder.Services.AddAutoMapper(cfg => 
-{
-    var licenseKey = builder.Configuration.GetValue<string>("AutoMapper:LicenseKey");
-    if (!string.IsNullOrEmpty(licenseKey))
-    {
-        cfg.LicenseKey = licenseKey;
-    }
-}, AppDomain.CurrentDomain.GetAssemblies());
+NatacaoAPI.Profiles.MapsterConfig.RegisterMappings();
+builder.Services.AddSingleton(Mapster.TypeAdapterConfig.GlobalSettings);
+builder.Services.AddScoped<MapsterMapper.IMapper, MapsterMapper.ServiceMapper>();
 
 // ══════════════════════════════════════════════════════════════════
 // 4. AUTENTICAÇÃO JWT
@@ -76,11 +76,46 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+// ══════════════════════════════════════════════════════════════════
+// 5. RATE LIMITING — Proteção contra força bruta
+// ══════════════════════════════════════════════════════════════════
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddFixedWindowLimiter("auth", opt =>
+    {
+        opt.PermitLimit = builder.Environment.IsDevelopment() ? 1000 : 5;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueLimit = 0;
+    });
+});
+
+// ══════════════════════════════════════════════════════════════════
+// 6. CORS — Política explícita para localhost
+// ══════════════════════════════════════════════════════════════════
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:5000", "https://localhost:5001")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+// ══════════════════════════════════════════════════════════════════
+// 7. REQUEST SIZE LIMIT — Proteção contra DoS
+// ══════════════════════════════════════════════════════════════════
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 10 * 1024 * 1024; // 10MB
+});
+
 // Health Check
 builder.Services.AddHealthChecks();
 
 // ══════════════════════════════════════════════════════════════════
-// 5. CONTROLLERS + SWAGGER
+// 8. CONTROLLERS + SWAGGER
 // ══════════════════════════════════════════════════════════════════
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -89,7 +124,7 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "NatacaoAPI",
-        Version = "v1",
+        Version = "v2",
         Description = "API de Agendamento e Controle para Aulas de Natação"
     });
 
@@ -122,12 +157,24 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 
 // ══════════════════════════════════════════════════════════════════
-// 6. MIDDLEWARE PIPELINE
+// 9. MIDDLEWARE PIPELINE
 //    Ordem importa! Exception handler primeiro, depois auth, depois endpoints.
 // ══════════════════════════════════════════════════════════════════
 
 // Middleware global de exceções — primeiro no pipeline para capturar tudo
 app.UseMiddleware<GlobalExceptionMiddleware>();
+
+// HTTPS redirection
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
+// CORS
+app.UseCors();
+
+// Rate Limiting
+app.UseRateLimiter();
 
 // Health Check Endpoint
 app.MapHealthChecks("/health");
@@ -138,7 +185,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         // Define o endpoint do JSON do Swagger
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "NatacaoAPI V1");
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "NatacaoAPI V2");
         // Define a rota para a UI do Swagger para não conflitar com a raiz
         c.RoutePrefix = "swagger";
     });
@@ -152,6 +199,59 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// ══════════════════════════════════════════════════════════════════
+// 10. SEED — Criar Usuários padrões na primeira execução (Admin, Professor, Aluno)
+// ══════════════════════════════════════════════════════════════════
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    if (!db.Usuarios.Any(u => u.Email == "admin@natacao.com"))
+    {
+        db.Usuarios.Add(new Usuario
+        {
+            Nome = "Administrador",
+            Email = "admin@natacao.com",
+            SenhaHash = BCrypt.Net.BCrypt.HashPassword("Admin@123", workFactor: 12),
+            Role = UsuarioRole.Admin,
+            DataCriacao = DateTime.UtcNow
+        });
+        db.SaveChanges();
+        logger.LogInformation("Admin seed criado: admin@natacao.com / Admin@123");
+    }
+
+    if (!db.Usuarios.Any(u => u.Email == "professor@natacao.com"))
+    {
+        db.Usuarios.Add(new Usuario
+        {
+            Nome = "Professor Teste",
+            Email = "professor@natacao.com",
+            SenhaHash = BCrypt.Net.BCrypt.HashPassword("Prof@123!", workFactor: 12),
+            Role = UsuarioRole.Professor,
+            DataCriacao = DateTime.UtcNow
+        });
+        db.SaveChanges();
+        logger.LogInformation("Professor seed criado: professor@natacao.com / Prof@123!");
+    }
+
+    if (!db.Usuarios.Any(u => u.Email == "aluno@natacao.com"))
+    {
+        db.Usuarios.Add(new Usuario
+        {
+            Nome = "Aluno Teste",
+            Email = "aluno@natacao.com",
+            SenhaHash = BCrypt.Net.BCrypt.HashPassword("Aluno@123!", workFactor: 12),
+            Role = UsuarioRole.Aluno,
+            DataCriacao = DateTime.UtcNow
+        });
+        db.SaveChanges();
+        logger.LogInformation("Aluno seed criado: aluno@natacao.com / Aluno@123!");
+    }
+}
 
 app.Run();
 

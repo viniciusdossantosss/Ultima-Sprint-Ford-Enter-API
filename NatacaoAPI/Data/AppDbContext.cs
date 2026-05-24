@@ -28,8 +28,10 @@ namespace NatacaoAPI.Data
             modelBuilder.Entity<Usuario>(entity =>
             {
                 entity.HasIndex(u => u.Email).IsUnique();
-                // Armazena enum como string: "Aluno", "Professor"
+                // Armazena enum como string: "Aluno", "Professor", "Admin"
                 entity.Property(u => u.Role).HasConversion<string>().HasMaxLength(20);
+                // Índice para busca rápida por reset token
+                entity.HasIndex(u => u.ResetToken);
             });
 
             // ─── Turma ───────────────────────────────────────────────

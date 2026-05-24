@@ -65,3 +65,6 @@ secrets.json
 
 # Log files
 *.log
+
+# Node.js
+node_modules/

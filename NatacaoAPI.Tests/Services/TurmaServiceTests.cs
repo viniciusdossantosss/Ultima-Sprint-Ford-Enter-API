@@ -1,5 +1,5 @@
 using Moq;
-using AutoMapper;
+using MapsterMapper;
 using NatacaoAPI.DTOs.Turma;
 using NatacaoAPI.Models;
 using NatacaoAPI.Repositories.Interfaces;

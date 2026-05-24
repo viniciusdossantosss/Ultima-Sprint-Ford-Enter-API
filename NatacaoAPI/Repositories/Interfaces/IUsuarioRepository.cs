@@ -10,7 +10,11 @@ namespace NatacaoAPI.Repositories.Interfaces
     {
         Task<Usuario?> GetByIdAsync(int id);
         Task<Usuario?> GetByEmailAsync(string email);
+        Task<IEnumerable<Usuario>> GetAllAsync();
         Task<Usuario> CreateAsync(Usuario usuario);
+        Task<Usuario> UpdateAsync(Usuario usuario);
+        Task DeleteAsync(Usuario usuario);
         Task<bool> EmailExistsAsync(string email);
+        Task<Usuario?> GetByResetTokenAsync(string token);
     }
 }
