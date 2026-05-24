@@ -35,6 +35,7 @@ builder.Services.AddScoped<ITurmaService, TurmaService>();
 builder.Services.AddScoped<IReservaService, ReservaService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddHttpClient();
 
 // ══════════════════════════════════════════════════════════════════
 // 3. MAPSTER — Configuração de mapeamento (substitui AutoMapper vulnerável)

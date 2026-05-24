@@ -297,6 +297,8 @@ function handleDateClick(info) {
 
 async function handleTurmaSubmit(e) {
     e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    if (btn) btn.disabled = true;
     const turmaId = document.getElementById('turmaId').value;
     const isEdit = !!turmaId;
 
@@ -325,6 +327,8 @@ async function handleTurmaSubmit(e) {
         loadReservas();
     } catch (err) {
         showToast(err.message, 'danger');
+    } finally {
+        if (btn) btn.disabled = false;
     }
 }
 
@@ -493,6 +497,8 @@ async function loadUsuarios() {
 
 async function handleCreateUsuario(e) {
     e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    if (btn) btn.disabled = true;
     try {
         const res = await apiFetch('/usuarios', {
             method: 'POST',
@@ -514,6 +520,9 @@ async function handleCreateUsuario(e) {
         showToast('Usuário cadastrado! Email de boas-vindas enviado. 📧', 'success');
         loadUsuarios();
     } catch (err) { showToast(err.message, 'danger'); }
+    finally {
+        if (btn) btn.disabled = false;
+    }
 }
 
 async function deleteUsuario(id, nome) {

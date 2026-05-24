@@ -51,6 +51,8 @@ namespace NatacaoAPI.Middleware
                 ArgumentException => (HttpStatusCode.BadRequest, exception.Message),
                 UnauthorizedAccessException => (HttpStatusCode.Unauthorized, exception.Message),
                 KeyNotFoundException => (HttpStatusCode.NotFound, exception.Message),
+                Microsoft.EntityFrameworkCore.DbUpdateException dbEx when dbEx.InnerException is MySqlConnector.MySqlException mySqlEx && mySqlEx.Number == 1062 =>
+                    (HttpStatusCode.BadRequest, "Este e-mail já está cadastrado."),
                 _ => (HttpStatusCode.InternalServerError, "Ocorreu um erro interno no servidor.")
             };
 
