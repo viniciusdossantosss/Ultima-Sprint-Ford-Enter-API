@@ -18,12 +18,10 @@ namespace NatacaoAPI.Profiles
                     opt => opt.MapFrom(src => src.Aluno != null ? src.Aluno.Nome : ""))
                 .ForMember(dest => dest.TurmaNome,
                     opt => opt.MapFrom(src => src.Turma != null ? src.Turma.Nome : ""))
-                .ForMember(dest => dest.DiaSemana,
-                    opt => opt.MapFrom(src => src.Turma != null ? src.Turma.DiaSemana.ToString() : ""))
-                .ForMember(dest => dest.HorarioInicio,
-                    opt => opt.MapFrom(src => src.Turma != null ? src.Turma.HorarioInicio.ToString(@"hh\:mm") : ""))
-                .ForMember(dest => dest.HorarioFim,
-                    opt => opt.MapFrom(src => src.Turma != null ? src.Turma.HorarioFim.ToString(@"hh\:mm") : ""))
+                .ForMember(dest => dest.DataHoraInicio,
+                    opt => opt.MapFrom(src => src.Turma != null ? src.Turma.DataHoraInicio : default))
+                .ForMember(dest => dest.DataHoraFim,
+                    opt => opt.MapFrom(src => src.Turma != null ? src.Turma.DataHoraFim : default))
                 .ForMember(dest => dest.Status,
                     opt => opt.MapFrom(src => src.Status.ToString()));
         }

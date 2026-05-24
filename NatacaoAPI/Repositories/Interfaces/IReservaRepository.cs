@@ -12,10 +12,9 @@ namespace NatacaoAPI.Repositories.Interfaces
 
         /// <summary>
         /// Verifica se o aluno já possui uma reserva ativa em uma turma
-        /// que conflita com o mesmo DiaSemana e intervalo de horário. (RF002)
+        /// que conflita com o mesmo intervalo de data e hora. (RF002)
         /// </summary>
-        Task<bool> AlunoHasConflictAsync(int alunoId, DiaSemana diaSemana,
-            TimeSpan horarioInicio, TimeSpan horarioFim);
+        Task<bool> AlunoHasConflictAsync(int alunoId, DateTime dataHoraInicio, DateTime dataHoraFim);
 
         /// <summary>
         /// Verifica se o aluno já possui reserva ativa nesta mesma turma.

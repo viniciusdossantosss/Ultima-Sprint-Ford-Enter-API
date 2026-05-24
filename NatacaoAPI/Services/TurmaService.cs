@@ -76,9 +76,8 @@ namespace NatacaoAPI.Services
             turma.Nome = updateDto.Nome;
             turma.Descricao = updateDto.Descricao;
             turma.Modalidade = updateDto.Modalidade;
-            turma.DiaSemana = (DiaSemana)updateDto.DiaSemana;
-            turma.HorarioInicio = TimeSpan.Parse(updateDto.HorarioInicio);
-            turma.HorarioFim = TimeSpan.Parse(updateDto.HorarioFim);
+            turma.DataHoraInicio = updateDto.DataHoraInicio;
+            turma.DataHoraFim = updateDto.DataHoraFim;
             turma.CapacidadeMaxima = updateDto.CapacidadeMaxima;
 
             await _turmaRepository.UpdateAsync(turma);

@@ -37,7 +37,11 @@ builder.Services.AddScoped<IReservaService, ReservaService>();
 // ══════════════════════════════════════════════════════════════════
 builder.Services.AddAutoMapper(cfg => 
 {
-    cfg.LicenseKey = "eyJhbGciOiJSUzI1NiIsImtpZCI6Ikx1Y2t5UGVubnlTb2Z0d2FyZUxpY2Vuc2VLZXkvYmJiMTNhY2I1OTkwNGQ4OWI0Y2IxYzg1ZjA4OGNjZjkiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2x1Y2t5cGVubnlzb2Z0d2FyZS5jb20iLCJhdWQiOiJMdWNreVBlbm55U29mdHdhcmUiLCJleHAiOiIxODA4Njk3NjAwIiwiaWF0IjoiMTc3NzIzMTE2MSIsImFjY291bnRfaWQiOiIwMTlkY2IzYWU5NTI3ZDk4YTA5MWJkZmIzYzc2ZDBjZSIsImN1c3RvbWVyX2lkIjoiY3RtXzAxa3E1a3B0N2VjOHBkZGNqbWQ5aHYwN3ZmIiwic3ViX2lkIjoiLSIsImVkaXRpb24iOiIwIiwidHlwZSI6IjIifQ.WUc5NBu39ZbF2a2inQjF1wbaRSVX9u5o8R6zlXomLxa3CvS-gLp6O_J3b64PDiFpvTXJMeW-XW2Gvrg6YO9-_a7CpBO8jOWucFpp1e8_fnqE3aIpf-XC5LEeMCRKtJBCxOb2RrkFklFpfrZY9EfQLjsFO6QSR5mt9wnlFDkouV72g_DuC4ktbgfJIPk5eOlYASKiDx3SNY31oJAvoIwa86x027RyTznvy6LQ_gtiiMbNJxCtoCQK26EUH6xdbOj_EF1quxaCD3shos0ZnUuu1oRbm6rlVbtpu0xKcyhq8AUGevBp1hkMxxIXuPCCN6In14gMX3QQoUIBzJCGb-A-Dw";
+    var licenseKey = builder.Configuration.GetValue<string>("AutoMapper:LicenseKey");
+    if (!string.IsNullOrEmpty(licenseKey))
+    {
+        cfg.LicenseKey = licenseKey;
+    }
 }, AppDomain.CurrentDomain.GetAssemblies());
 
 // ══════════════════════════════════════════════════════════════════
@@ -55,7 +59,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = false; // Dev only
+    options.RequireHttpsMetadata = !builder.Environment.IsDevelopment(); // Dev only = false
     options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -71,6 +75,9 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
+
+// Health Check
+builder.Services.AddHealthChecks();
 
 // ══════════════════════════════════════════════════════════════════
 // 5. CONTROLLERS + SWAGGER
@@ -122,10 +129,19 @@ var app = builder.Build();
 // Middleware global de exceções — primeiro no pipeline para capturar tudo
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
+// Health Check Endpoint
+app.MapHealthChecks("/health");
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        // Define o endpoint do JSON do Swagger
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "NatacaoAPI V1");
+        // Define a rota para a UI do Swagger para não conflitar com a raiz
+        c.RoutePrefix = "swagger";
+    });
 }
 
 // Arquivos estáticos do frontend (wwwroot)

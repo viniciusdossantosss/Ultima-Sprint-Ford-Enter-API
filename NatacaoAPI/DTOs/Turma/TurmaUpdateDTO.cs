@@ -14,15 +14,11 @@ namespace NatacaoAPI.DTOs.Turma
         [Required(ErrorMessage = "A modalidade é obrigatória.")]
         public string Modalidade { get; set; } = string.Empty;
 
-        [Required]
-        [Range(1, 6)]
-        public int DiaSemana { get; set; }
+        [Required(ErrorMessage = "A data e hora de início são obrigatórias.")]
+        public DateTime DataHoraInicio { get; set; }
 
-        [Required(ErrorMessage = "O horário de início é obrigatório.")]
-        public string HorarioInicio { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "O horário de fim é obrigatório.")]
-        public string HorarioFim { get; set; } = string.Empty;
+        [Required(ErrorMessage = "A data e hora de término são obrigatórias.")]
+        public DateTime DataHoraFim { get; set; }
 
         [Required]
         [Range(1, 50)]

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("NatacaoAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+615fc9eee13fe5cafd88e0eeb3ff2077e7114ea2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6f3f3a8cd70205a4405501f17458abd578c46069")]
 [assembly: System.Reflection.AssemblyProductAttribute("NatacaoAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("NatacaoAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -35,8 +35,6 @@ namespace NatacaoAPI.Data
             // ─── Turma ───────────────────────────────────────────────
             modelBuilder.Entity<Turma>(entity =>
             {
-                entity.Property(t => t.DiaSemana).HasConversion<string>().HasMaxLength(20);
-
                 entity.HasOne(t => t.Professor)
                       .WithMany(u => u.TurmasLecionadas)
                       .HasForeignKey(t => t.ProfessorId)

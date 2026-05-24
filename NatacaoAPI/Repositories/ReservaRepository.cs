@@ -57,21 +57,19 @@ namespace NatacaoAPI.Repositories
 
         /// <summary>
         /// RF002: Verifica conflito de horário.
-        /// Um conflito ocorre quando o aluno já tem reserva ativa em turma
-        /// no mesmo dia da semana com sobreposição de horário.
-        /// Sobreposição: InicioA < FimB && InicioB < FimA
+        /// Um conflito ocorre se o aluno já tem uma reserva ativa cujo período
+        /// se sobrepõe com o novo agendamento.
+        /// Lógica de sobreposição: InicioA < FimB && InicioB < FimA
         /// </summary>
-        public async Task<bool> AlunoHasConflictAsync(int alunoId, DiaSemana diaSemana,
-            TimeSpan horarioInicio, TimeSpan horarioFim)
+        public async Task<bool> AlunoHasConflictAsync(int alunoId, DateTime dataHoraInicio, DateTime dataHoraFim)
         {
             return await _context.Reservas
                 .Include(r => r.Turma)
                 .AnyAsync(r =>
                     r.AlunoId == alunoId &&
                     r.Status == StatusReserva.Ativa &&
-                    r.Turma.DiaSemana == diaSemana &&
-                    r.Turma.HorarioInicio < horarioFim &&
-                    horarioInicio < r.Turma.HorarioFim);
+                    r.Turma.DataHoraInicio < dataHoraFim &&
+                    dataHoraInicio < r.Turma.DataHoraFim);
         }
 
         public async Task<bool> AlunoJaReservouTurmaAsync(int alunoId, int turmaId)

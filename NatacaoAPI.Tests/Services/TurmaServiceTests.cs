@@ -4,14 +4,14 @@ using NatacaoAPI.DTOs.Turma;
 using NatacaoAPI.Models;
 using NatacaoAPI.Repositories.Interfaces;
 using NatacaoAPI.Services;
-using Xunit; // Adicionado using para Xunit
+using Xunit;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace NatacaoAPI.Tests.Services
 {
-    /// <summary>
-    /// Testes unitários para TurmaService.
-    /// Valida operações CRUD e cálculo de VagasDisponiveis.
-    /// </summary>
     public class TurmaServiceTests
     {
         private readonly Mock<ITurmaRepository> _mockTurmaRepo;
@@ -31,26 +31,8 @@ namespace NatacaoAPI.Tests.Services
             // Arrange
             var turmas = new List<Turma>
             {
-                new Turma
-                {
-                    Id = 1,
-                    Nome = "Turma A",
-                    CapacidadeMaxima = 10,
-                    DiaSemana = DiaSemana.Segunda,
-                    HorarioInicio = new TimeSpan(8, 0, 0),
-                    HorarioFim = new TimeSpan(9, 0, 0),
-                    Professor = new Usuario { Nome = "Prof. Maria" }
-                },
-                new Turma
-                {
-                    Id = 2,
-                    Nome = "Turma B",
-                    CapacidadeMaxima = 5,
-                    DiaSemana = DiaSemana.Quarta,
-                    HorarioInicio = new TimeSpan(10, 0, 0),
-                    HorarioFim = new TimeSpan(11, 0, 0),
-                    Professor = new Usuario { Nome = "Prof. João" }
-                }
+                new Turma { Id = 1, Nome = "Turma A", CapacidadeMaxima = 10, DataHoraInicio = DateTime.Now, DataHoraFim = DateTime.Now.AddHours(1), Professor = new Usuario { Nome = "Prof. Maria" } },
+                new Turma { Id = 2, Nome = "Turma B", CapacidadeMaxima = 5, DataHoraInicio = DateTime.Now, DataHoraFim = DateTime.Now.AddHours(1), Professor = new Usuario { Nome = "Prof. João" } }
             };
 
             _mockTurmaRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(turmas);
@@ -67,8 +49,8 @@ namespace NatacaoAPI.Tests.Services
 
             // Assert
             Assert.Equal(2, result.Count);
-            Assert.Equal(7, result[0].VagasDisponiveis);  // 10 - 3 = 7
-            Assert.Equal(0, result[1].VagasDisponiveis);   // 5 - 5 = 0 (lotada)
+            Assert.Equal(7, result[0].VagasDisponiveis);
+            Assert.Equal(0, result[1].VagasDisponiveis);
         }
 
         [Fact]
@@ -88,14 +70,7 @@ namespace NatacaoAPI.Tests.Services
         public async Task GetByIdAsync_DeveRetornarTurmaComVagas()
         {
             // Arrange
-            var turma = new Turma
-            {
-                Id = 1,
-                Nome = "Turma Teste",
-                CapacidadeMaxima = 15,
-                Professor = new Usuario { Nome = "Prof. Ana" }
-            };
-
+            var turma = new Turma { Id = 1, Nome = "Turma Teste", CapacidadeMaxima = 15, Professor = new Usuario { Nome = "Prof. Ana" } };
             _mockTurmaRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(turma);
             _mockTurmaRepo.Setup(r => r.GetActiveReservasCountAsync(1)).ReturnsAsync(8);
             _mockMapper.Setup(m => m.Map<TurmaResponseDTO>(turma))
@@ -106,7 +81,7 @@ namespace NatacaoAPI.Tests.Services
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal(7, result!.VagasDisponiveis); // 15 - 8 = 7
+            Assert.Equal(7, result!.VagasDisponiveis);
         }
 
         [Fact]

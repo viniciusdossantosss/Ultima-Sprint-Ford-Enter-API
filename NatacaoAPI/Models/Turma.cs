@@ -4,23 +4,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace NatacaoAPI.Models
 {
     /// <summary>
-    /// Enum para dias da semana das aulas.
-    /// Valores iniciam em 1 para evitar ambiguidade com default(int) = 0.
-    /// </summary>
-    public enum DiaSemana
-    {
-        Segunda = 1,
-        Terca = 2,
-        Quarta = 3,
-        Quinta = 4,
-        Sexta = 5,
-        Sabado = 6
-    }
-
-    /// <summary>
     /// Entidade de domínio que representa uma turma de natação.
-    /// Cada turma possui um horário fixo semanal, um professor responsável,
-    /// e uma capacidade máxima de alunos — regra de negócio central (RF001).
+    /// Agora suporta datas específicas, permitindo visualização em formato de calendário.
+    /// Mantém as regras de negócio de capacidade máxima (RF001).
     /// </summary>
     public class Turma
     {
@@ -41,14 +27,17 @@ namespace NatacaoAPI.Models
         [MaxLength(50)]
         public string Modalidade { get; set; } = string.Empty;
 
-        [Required]
-        public DiaSemana DiaSemana { get; set; }
+        /// <summary>
+        /// Data e Hora de início exatas da aula (ex: 2024-10-25 08:00).
+        /// </summary>
+        [Required(ErrorMessage = "A data e hora de início são obrigatórias.")]
+        public DateTime DataHoraInicio { get; set; }
 
-        [Required]
-        public TimeSpan HorarioInicio { get; set; }
-
-        [Required]
-        public TimeSpan HorarioFim { get; set; }
+        /// <summary>
+        /// Data e Hora de término exatas da aula (ex: 2024-10-25 09:00).
+        /// </summary>
+        [Required(ErrorMessage = "A data e hora de término são obrigatórias.")]
+        public DateTime DataHoraFim { get; set; }
 
         /// <summary>
         /// Capacidade máxima de alunos. Utilizada na RF001 para bloquear

@@ -15,20 +15,16 @@ namespace NatacaoAPI.DTOs.Turma
         public string Modalidade { get; set; } = string.Empty;
 
         /// <summary>
-        /// Dia da semana (1=Segunda ... 6=Sábado).
+        /// Data e Hora de início exatas da aula (ex: 2024-10-25 08:00).
         /// </summary>
-        [Required]
-        [Range(1, 6, ErrorMessage = "DiaSemana deve ser entre 1 (Segunda) e 6 (Sábado).")]
-        public int DiaSemana { get; set; }
+        [Required(ErrorMessage = "A data e hora de início são obrigatórias.")]
+        public DateTime DataHoraInicio { get; set; }
 
         /// <summary>
-        /// Formato "HH:mm" (ex: "08:00").
+        /// Data e Hora de término exatas da aula (ex: 2024-10-25 09:00).
         /// </summary>
-        [Required(ErrorMessage = "O horário de início é obrigatório.")]
-        public string HorarioInicio { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "O horário de fim é obrigatório.")]
-        public string HorarioFim { get; set; } = string.Empty;
+        [Required(ErrorMessage = "A data e hora de término são obrigatórias.")]
+        public DateTime DataHoraFim { get; set; }
 
         [Required]
         [Range(1, 50, ErrorMessage = "A capacidade deve ser entre 1 e 50.")]

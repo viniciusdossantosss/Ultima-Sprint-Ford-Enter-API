@@ -70,9 +70,9 @@ namespace NatacaoAPI.Services
 
             // ─── RF002: Verificar conflito de horário ────────────────
             if (await _reservaRepository.AlunoHasConflictAsync(
-                    alunoId, turma.DiaSemana, turma.HorarioInicio, turma.HorarioFim))
+                    alunoId, turma.DataHoraInicio, turma.DataHoraFim))
                 throw new InvalidOperationException(
-                    $"RF002: Você já possui uma aula agendada no mesmo horário ({turma.DiaSemana}, {turma.HorarioInicio:hh\\:mm}-{turma.HorarioFim:hh\\:mm}).");
+                    $"RF002: Você já possui uma aula agendada que conflita com este horário ({turma.DataHoraInicio:g} - {turma.DataHoraFim:t}).");
 
             // Criar a reserva
             var reserva = new Reserva

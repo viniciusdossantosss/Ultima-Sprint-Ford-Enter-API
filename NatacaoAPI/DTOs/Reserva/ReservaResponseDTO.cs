@@ -11,9 +11,8 @@ namespace NatacaoAPI.DTOs.Reserva
         public string AlunoNome { get; set; } = string.Empty;
         public int TurmaId { get; set; }
         public string TurmaNome { get; set; } = string.Empty;
-        public string DiaSemana { get; set; } = string.Empty;
-        public string HorarioInicio { get; set; } = string.Empty;
-        public string HorarioFim { get; set; } = string.Empty;
+        public DateTime DataHoraInicio { get; set; }
+        public DateTime DataHoraFim { get; set; }
         public DateTime DataReserva { get; set; }
         public string Status { get; set; } = string.Empty;
     }

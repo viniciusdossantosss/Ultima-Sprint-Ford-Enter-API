@@ -106,7 +106,6 @@
 /home/vinicius-dos-santos/Documentos/Ultima-Sprint-Ford-Enter-API/NatacaoAPI/obj/Debug/net10.0/rjsmrazor.dswa.cache.json
 /home/vinicius-dos-santos/Documentos/Ultima-Sprint-Ford-Enter-API/NatacaoAPI/obj/Debug/net10.0/rjsmcshtml.dswa.cache.json
 /home/vinicius-dos-santos/Documentos/Ultima-Sprint-Ford-Enter-API/NatacaoAPI/obj/Debug/net10.0/scopedcss/bundle/NatacaoAPI.styles.css
-/home/vinicius-dos-santos/Documentos/Ultima-Sprint-Ford-Enter-API/NatacaoAPI/obj/Debug/net10.0/compressed/qpk18ruaxf-{0}-wt5gi20z7k-wt5gi20z7k.gz
 /home/vinicius-dos-santos/Documentos/Ultima-Sprint-Ford-Enter-API/NatacaoAPI/obj/Debug/net10.0/compressed/igz9rnme97-{0}-jex7wfzqqu-jex7wfzqqu.gz
 /home/vinicius-dos-santos/Documentos/Ultima-Sprint-Ford-Enter-API/NatacaoAPI/obj/Debug/net10.0/staticwebassets.build.json
 /home/vinicius-dos-santos/Documentos/Ultima-Sprint-Ford-Enter-API/NatacaoAPI/obj/Debug/net10.0/staticwebassets.build.json.cache
@@ -119,4 +118,6 @@
 /home/vinicius-dos-santos/Documentos/Ultima-Sprint-Ford-Enter-API/NatacaoAPI/obj/Debug/net10.0/NatacaoAPI.pdb
 /home/vinicius-dos-santos/Documentos/Ultima-Sprint-Ford-Enter-API/NatacaoAPI/obj/Debug/net10.0/NatacaoAPI.genruntimeconfig.cache
 /home/vinicius-dos-santos/Documentos/Ultima-Sprint-Ford-Enter-API/NatacaoAPI/obj/Debug/net10.0/ref/NatacaoAPI.dll
-/home/vinicius-dos-santos/Documentos/Ultima-Sprint-Ford-Enter-API/NatacaoAPI/obj/Debug/net10.0/compressed/s47h9yd29u-{0}-f83eln3313-f83eln3313.gz
+/home/vinicius-dos-santos/Documentos/Ultima-Sprint-Ford-Enter-API/NatacaoAPI/obj/Debug/net10.0/compressed/qpk18ruaxf-{0}-fxxj13h2cj-fxxj13h2cj.gz
+/home/vinicius-dos-santos/Documentos/Ultima-Sprint-Ford-Enter-API/NatacaoAPI/obj/Debug/net10.0/compressed/s47h9yd29u-{0}-2i87ty53bl-2i87ty53bl.gz
+/home/vinicius-dos-santos/Documentos/Ultima-Sprint-Ford-Enter-API/NatacaoAPI/obj/Debug/net10.0/compressed/ocu4iruj0a-{0}-t1hm0btskj-t1hm0btskj.gz
