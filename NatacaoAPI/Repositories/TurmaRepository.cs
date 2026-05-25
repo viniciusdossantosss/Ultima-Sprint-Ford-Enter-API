@@ -19,6 +19,7 @@ namespace NatacaoAPI.Repositories
             return await _context.Turmas
                 .Include(t => t.Professor)
                 .Include(t => t.Reservas)
+                    .ThenInclude(r => r.Aluno)
                 .AsNoTracking()
                 .ToListAsync();
         }
@@ -28,6 +29,7 @@ namespace NatacaoAPI.Repositories
             return await _context.Turmas
                 .Include(t => t.Professor)
                 .Include(t => t.Reservas)
+                    .ThenInclude(r => r.Aluno)
                 .FirstOrDefaultAsync(t => t.Id == id);
         }
 

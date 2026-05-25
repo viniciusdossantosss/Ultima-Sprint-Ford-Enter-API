@@ -26,7 +26,8 @@ namespace NatacaoAPI.Profiles
             TypeAdapterConfig<Turma, TurmaResponseDTO>.NewConfig()
                 .Map(dest => dest.ProfessorNome,
                     src => src.Professor != null ? src.Professor.Nome : "")
-                .Ignore(dest => dest.VagasDisponiveis); // Calculado dinamicamente no Service
+                .Ignore(dest => dest.VagasDisponiveis) // Calculado dinamicamente no Service
+                .Ignore(dest => dest.AlunosInscritos);
 
             // ─── Reserva → ReservaResponseDTO ───────────────────────
             TypeAdapterConfig<Reserva, ReservaResponseDTO>.NewConfig()

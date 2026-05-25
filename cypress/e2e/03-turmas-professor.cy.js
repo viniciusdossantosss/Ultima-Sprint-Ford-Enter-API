@@ -89,6 +89,7 @@ describe('03 - Turmas (Professor)', () => {
         cy.get('#turmaInicio').type(`${dateStr}T10:00`);
         cy.get('#turmaFim').type(`${dateStr}T11:00`);
         cy.get('#turmaCapacidade').clear().type('10');
+        cy.get('#turmaProfessorId').invoke('val', profUserId.toString()).trigger('change');
 
         cy.intercept('POST', '/api/turmas').as('createTurmaAdmin');
         cy.get('#btnSaveTurma').click();

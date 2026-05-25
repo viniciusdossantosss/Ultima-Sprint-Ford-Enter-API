@@ -28,7 +28,6 @@ describe('02 - Gestão de Usuários (Admin)', () => {
 
         cy.get('#usuarioNome').type('Prof. Cypress Test');
         cy.get('#usuarioEmail').type(`prof.cypress.${Date.now()}@test.com`);
-        cy.get('#usuarioSenha').type('Prof@123!');
         cy.get('#usuarioRole').select('Professor');
 
         cy.intercept('POST', '/api/usuarios').as('createUser');
@@ -47,7 +46,6 @@ describe('02 - Gestão de Usuários (Admin)', () => {
 
         cy.get('#usuarioNome').type('Aluno Cypress Test');
         cy.get('#usuarioEmail').type(`aluno.cypress.${Date.now()}@test.com`);
-        cy.get('#usuarioSenha').type('Aluno@123!');
         cy.get('#usuarioRole').select('Aluno');
 
         // Preencher novos campos obrigatórios
@@ -68,7 +66,6 @@ describe('02 - Gestão de Usuários (Admin)', () => {
 
         cy.get('#usuarioNome').type('Aluno Menor Test');
         cy.get('#usuarioEmail').type(`menor.cypress.${Date.now()}@test.com`);
-        cy.get('#usuarioSenha').type('Aluno@123!');
         cy.get('#usuarioRole').select('Aluno');
         
         // Define data de nascimento para menor de idade (ex: 10 anos atrás)
@@ -91,6 +88,65 @@ describe('02 - Gestão de Usuários (Admin)', () => {
             createdUserIds.push(interception.response.body.id);
             expect(interception.response.body.nomeResponsavel).to.eq('Responsável Cypress');
             expect(interception.response.body.modalidadeSugerida).to.eq('Infantil');
+        });
+    });
+
+    it('Deve buscar aluno por nome', () => {
+        cy.get('[data-section="usuarios"]').click();
+        
+        // Criar um usuário específico para buscar
+        const nomeBusca = `Busca_${Date.now()}`;
+        const emailBusca = `${nomeBusca.toLowerCase()}@test.com`;
+        cy.apiCreateUser({ nome: nomeBusca, email: emailBusca, role: 'Aluno' }).then(res => {
+            createdUserIds.push(res.body.id);
+            cy.reload();
+            cy.get('[data-section="usuarios"]').click();
+            
+            // Digitar na busca
+            cy.get('#buscaUsuario').type(nomeBusca);
+            
+            // A tabela deve exibir o usuário e esconder outros que não contêm o nome
+            cy.get('#usuariosBody').should('contain.text', nomeBusca);
+            cy.get('#usuariosBody tr').should('have.length', 1);
+        });
+    });
+
+    it('Deve editar dados de um Aluno existente', () => {
+        const email = `editar.cypress.${Date.now()}@test.com`;
+        cy.apiCreateUser({ nome: 'Aluno Para Editar', email, role: 'Aluno' }).then(res => {
+            const userId = res.body.id;
+            createdUserIds.push(userId);
+            
+            cy.reload();
+            cy.get('[data-section="usuarios"]').click();
+            cy.get('#usuariosBody').should('contain.text', email);
+
+            // Clicar no botão de editar
+            cy.get('#usuariosBody').contains('tr', email).find('.btn-action.editar').click();
+            cy.get('#usuarioModal').should('be.visible');
+            
+            // O modal deve estar com o campo de perfil desabilitado
+            cy.get('#usuarioRole').should('be.disabled');
+
+            // Aguardar a animação do modal terminar para que o Bootstrap não roube o foco
+            cy.wait(500);
+
+            // Garantir que os dados do usuário foram carregados no formulário
+            cy.get('#usuarioNome').should('have.value', 'Aluno Para Editar');
+
+            // Alterar telefone e saúde
+            cy.get('#usuarioNome').clear().type('Aluno Editado Cypress').should('have.value', 'Aluno Editado Cypress');
+            cy.get('#usuarioTelefone').clear().type('(11) 98765-4321').should('have.value', '(11) 98765-4321');
+            cy.get('#usuarioDocSaude').check();
+
+            cy.intercept('PUT', `/api/usuarios/${userId}`).as('updateUser');
+            cy.get('#btnSaveUsuario').click();
+            cy.wait('@updateUser').its('response.statusCode').should('eq', 200);
+
+            // Verificar se os dados alterados aparecem na listagem
+            cy.get('#usuariosBody').should('contain.text', 'Aluno Editado Cypress');
+            cy.get('#usuariosBody').should('contain.text', '(11) 98765-4321');
+            cy.get('#usuariosBody').should('contain.text', 'Doc. OK');
         });
     });
 
@@ -123,14 +179,20 @@ describe('02 - Gestão de Usuários (Admin)', () => {
         });
     });
 
-    it('NÃO deve exibir seção de usuários para Professor', () => {
+    it('Deve exibir seção de Alunos para Professor sem permitir criação', () => {
         const email = `prof.visibility.${Date.now()}@test.com`;
         cy.apiCreateUser({ nome: 'Prof Visibility', email, senha: 'Prof@123!', role: 'Professor' }).then(res => {
             createdUserIds.push(res.body.id);
             cy.clearLocalStorage();
             cy.apiLogin(email, 'Prof@123!');
             cy.visit('/dashboard.html');
-            cy.get('[data-section="usuarios"]').should('not.be.visible');
+            
+            // Professor deve ver a aba, mas com o texto "Alunos"
+            cy.get('[data-section="usuarios"]').should('be.visible').should('contain.text', 'Alunos').click();
+            cy.get('#sectionUsuarios').should('be.visible');
+            
+            // Professor NÃO deve ver o botão de Novo Usuário
+            cy.get('#btnNovoUsuario').should('not.be.visible');
         });
     });
 });

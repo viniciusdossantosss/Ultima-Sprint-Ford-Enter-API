@@ -29,5 +29,7 @@ namespace NatacaoAPI.DTOs.Turma
         [Required]
         [Range(1, 50, ErrorMessage = "A capacidade deve ser entre 1 e 50.")]
         public int CapacidadeMaxima { get; set; }
+
+        public int? ProfessorId { get; set; }
     }
 }

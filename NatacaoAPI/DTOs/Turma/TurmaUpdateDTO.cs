@@ -23,5 +23,7 @@ namespace NatacaoAPI.DTOs.Turma
         [Required]
         [Range(1, 50)]
         public int CapacidadeMaxima { get; set; }
+
+        public int? ProfessorId { get; set; }
     }
 }

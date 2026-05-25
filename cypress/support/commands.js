@@ -15,6 +15,7 @@ Cypress.Commands.add('apiLogin', (email, senha) => {
 
 // Login via UI (testa a interface)
 Cypress.Commands.add('uiLogin', (email, senha) => {
+    cy.clearLocalStorage();
     cy.visit('/');
     cy.get('#loginEmail').clear().type(email);
     cy.get('#loginSenha').clear().type(senha);
@@ -28,6 +29,17 @@ Cypress.Commands.add('apiCreateUser', (userData) => {
     if (payload.role === 'Aluno') {
         if (!payload.dataNascimento) payload.dataNascimento = '2000-01-01';
         if (!payload.telefone) payload.telefone = '(11) 99999-9999';
+        if (!payload.senha) payload.senha = 'Aluno@123!';
+    } else if (payload.role === 'Professor') {
+        if (!payload.cref) payload.cref = '123456-G/SP';
+        if (payload.crefAtivo === undefined) payload.crefAtivo = true;
+        if (payload.aptoAdulto === undefined) payload.aptoAdulto = true;
+        if (payload.aptoInfantil === undefined) payload.aptoInfantil = true;
+        if (payload.aptoBebes === undefined) payload.aptoBebes = true;
+        if (payload.aptoAltaPerformance === undefined) payload.aptoAltaPerformance = true;
+        if (payload.aptoHidroginastica === undefined) payload.aptoHidroginastica = true;
+        if (payload.aptoPcd === undefined) payload.aptoPcd = true;
+        if (!payload.senha) payload.senha = 'Prof@123!';
     }
     return cy.apiLogin('admin@natacao.com', 'Admin@123').then(admin => {
         return cy.request({
@@ -36,6 +48,11 @@ Cypress.Commands.add('apiCreateUser', (userData) => {
             headers: { Authorization: `Bearer ${admin.token}` },
             body: payload,
             failOnStatusCode: false
+        }).then(res => {
+            if (res.status !== 201) {
+                throw new Error(`apiCreateUser failed with status ${res.status}: ${JSON.stringify(res.body)}`);
+            }
+            return res;
         });
     });
 });

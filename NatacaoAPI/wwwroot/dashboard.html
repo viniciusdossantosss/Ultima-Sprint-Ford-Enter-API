@@ -1,20 +1,20 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-bs-theme="dark">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self';">
     <title>Dashboard — AquaSchedule</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2.0.2">
 </head>
 <body>
 
     <!-- TOP NAV -->
-    <nav class="top-nav glass-nav" id="mainNav">
+    <nav class="top-nav" id="mainNav">
         <div class="nav-brand">
             <svg viewBox="0 0 32 32" fill="none" width="28" height="28">
                 <circle cx="16" cy="16" r="14" stroke="#06b6d4" stroke-width="2" fill="none"/>
@@ -29,11 +29,30 @@
             <button class="nav-tab" data-section="reservas" onclick="switchSection('reservas')">
                 <i class="bi bi-bookmark-star"></i><span>Reservas</span>
             </button>
-            <button class="nav-tab admin-only" data-section="usuarios" onclick="switchSection('usuarios')" style="display:none">
+            <button class="nav-tab" data-section="usuarios" onclick="switchSection('usuarios')" style="display:none">
                 <i class="bi bi-people"></i><span>Usuários</span>
+            </button>
+            <button class="nav-tab" data-section="perfil" onclick="switchSection('perfil')">
+                <i class="bi bi-person-circle"></i><span>Meu Perfil</span>
             </button>
         </div>
         <div class="nav-user" id="navUserArea">
+            <div class="nav-notification-wrapper">
+                <button class="nav-notification-btn" id="btnNotification" onclick="toggleNotificationsDropdown(event)" title="Notificações">
+                    <i class="bi bi-bell"></i>
+                    <span class="notification-badge" id="notifBadge" style="display:none"></span>
+                </button>
+                <div class="notification-dropdown" id="notifDropdown" style="display:none">
+                    <div class="notif-header">
+                        <span class="notif-title">Notificações</span>
+                        <button class="notif-clear-btn" onclick="markAllNotificationsAsRead(event)">Marcar como lidas</button>
+                    </div>
+                    <div class="notif-body" id="notifBody">
+                        <!-- Carregado via JS -->
+                        <div class="notif-empty">Sem novas notificações.</div>
+                    </div>
+                </div>
+            </div>
             <span class="nav-role-badge" id="navUserRole"></span>
             <span class="nav-user-name" id="navUserName"></span>
             <button class="nav-logout" id="btnLogout" onclick="logout()" title="Sair">
@@ -44,6 +63,19 @@
 
     <!-- MAIN CONTENT -->
     <main class="dashboard-main">
+        <!-- Alertas de Certificação de Professor (exibido apenas para Admin) -->
+        <div id="adminAlertasPanel" class="admin-only mb-4" style="display:none">
+            <div class="alert alert-warning glass-panel border border-warning-subtle d-flex align-items-start gap-3" role="alert" style="background: rgba(245, 158, 11, 0.1); color: #fbbf24; border-radius: 12px;">
+                <i class="bi bi-exclamation-triangle-fill fs-4 text-warning"></i>
+                <div class="flex-grow-1">
+                    <h5 class="alert-heading fw-700 mb-1">Certificações Próximas ao Vencimento / Vencidas</h5>
+                    <ul class="mb-0 ps-3" id="listaAlertasCertificacao" style="list-style-type: square;">
+                        <li>Sem alertas ativos no momento.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
         <!-- STATS ROW -->
         <div class="stats-grid" id="statsRow">
             <div class="stat-card animate-in" style="--delay:0">
@@ -107,14 +139,20 @@
             </div>
         </div>
 
-        <!-- SECTION: USUARIOS (Admin Only) -->
-        <div id="sectionUsuarios" class="content-section admin-only" style="display:none">
-            <div class="section-header">
+        <!-- SECTION: USUARIOS -->
+        <div id="sectionUsuarios" class="content-section">
+            <div class="section-header flex-column flex-md-row gap-3">
                 <h2><i class="bi bi-people me-2"></i>Gestão de Usuários</h2>
-                <button class="btn-primary-custom btn-sm" id="btnNovoUsuario"
-                    data-bs-toggle="modal" data-bs-target="#usuarioModal">
-                    <i class="bi bi-person-plus me-1"></i>Novo Usuário
-                </button>
+                <div class="d-flex gap-3 align-items-center flex-grow-1 justify-content-md-end w-100">
+                    <div class="position-relative" style="max-width: 300px; width: 100%;">
+                        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                        <input type="text" id="buscaUsuario" class="form-control ps-5" placeholder="Buscar por nome..." oninput="filtrarUsuarios()" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 50px;">
+                    </div>
+                    <button class="btn-primary-custom btn-sm" id="btnNovoUsuario"
+                        data-bs-toggle="modal" data-bs-target="#usuarioModal">
+                        <i class="bi bi-person-plus me-1"></i>Novo Usuário
+                    </button>
+                </div>
             </div>
             <div class="glass-panel p-0">
                 <div class="table-responsive">
@@ -124,8 +162,8 @@
                                 <th>Nome</th>
                                 <th>E-mail / Telefone</th>
                                 <th>Perfil</th>
-                                <th>Detalhes Aluno</th>
-                                <th>Saúde / Doc.</th>
+                                <th>Detalhes Aluno/Prof.</th>
+                                <th>Saúde / CREF / Doc.</th>
                                 <th>Cadastrado em</th>
                                 <th class="text-end">Ações</th>
                             </tr>
@@ -134,6 +172,180 @@
                             <tr><td colspan="7" class="text-center py-4 text-secondary">Carregando...</td></tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION: PERFIL -->
+        <div id="sectionPerfil" class="content-section">
+            <div class="section-header">
+                <h2><i class="bi bi-person-circle me-2"></i>Meu Perfil</h2>
+            </div>
+            <div class="row">
+                <div class="col-md-8 mx-auto">
+                    <div class="glass-panel p-4">
+                        <form id="perfilForm" onsubmit="handlePerfilSubmit(event)">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label for="perfilNome" class="form-label fw-500">Nome Completo</label>
+                                    <input type="text" class="form-control" id="perfilNome" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="perfilEmail" class="form-label fw-500">E-mail</label>
+                                    <input type="email" class="form-control" id="perfilEmail" required>
+                                </div>
+                            </div>
+                            
+                            <!-- CAMPOS DE ALUNO (mostrados via JS apenas se o usuário for Aluno) -->
+                            <div id="perfilAlunoFields" style="display:none">
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label for="perfilDataNascimento" class="form-label fw-500">Data de Nascimento</label>
+                                        <input type="date" class="form-control" id="perfilDataNascimento">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="perfilTelefone" class="form-label fw-500">Telefone</label>
+                                        <input type="text" class="form-control" id="perfilTelefone" placeholder="(00) 00000-0000">
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label for="perfilNivelPedagogico" class="form-label fw-500">Nível Pedagógico</label>
+                                        <input type="text" class="form-control text-muted" id="perfilNivelPedagogico" readonly style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="perfilModalidadeSugerida" class="form-label fw-500">Modalidade Sugerida</label>
+                                        <input type="text" class="form-control text-muted" id="perfilModalidadeSugerida" readonly style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6 d-flex align-items-end">
+                                        <div class="form-check form-switch mb-2">
+                                            <input class="form-check-input" type="checkbox" id="perfilDocSaude" disabled>
+                                            <label class="form-check-label fw-500 text-muted" for="perfilDocSaude">Documentação de Saúde Entregue</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="perfilProblemasSaude" class="form-label fw-500">Problemas / Condições de Saúde</label>
+                                    <textarea class="form-control" id="perfilProblemasSaude" rows="2" placeholder="Descreva problemas de saúde se houver, ou deixe em branco"></textarea>
+                                </div>
+
+                                <div id="perfilGrupoResponsavel" class="border border-secondary-subtle rounded p-3 mb-3" style="display:none; background: rgba(255,255,255,0.03)">
+                                    <h6 class="fw-600 mb-3 text-accent" style="font-size: 0.9rem">Responsável Legal (Menor de Idade)</h6>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="perfilNomeResponsavel" class="form-label fw-500">Nome do Responsável</label>
+                                            <input type="text" class="form-control" id="perfilNomeResponsavel">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="perfilTelefoneResponsavel" class="form-label fw-500">Telefone do Responsável</label>
+                                            <input type="text" class="form-control" id="perfilTelefoneResponsavel">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CAMPOS DE PROFESSOR (mostrados via JS apenas se o usuário for Professor) -->
+                            <div id="perfilProfessorFields" style="display:none">
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label for="perfilCref" class="form-label fw-500">CREF</label>
+                                        <input type="text" class="form-control" id="perfilCref" placeholder="Ex: 012345-G/SP">
+                                    </div>
+                                    <div class="col-md-6 d-flex align-items-end">
+                                        <div class="form-check form-switch mb-2">
+                                            <input class="form-check-input" type="checkbox" id="perfilCrefAtivo" disabled>
+                                            <label class="form-check-label fw-500 text-muted" for="perfilCrefAtivo">CREF Ativo (Apenas Admin altera)</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-500 d-block">Minhas Aptidões (Matriz de Aptidão)</label>
+                                    <div class="row g-2">
+                                        <div class="col-6 col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="perfilAptoBebes">
+                                                <label class="form-check-label" for="perfilAptoBebes">Bebês</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="perfilAptoInfantil">
+                                                <label class="form-check-label" for="perfilAptoInfantil">Infantil</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="perfilAptoAdulto">
+                                                <label class="form-check-label" for="perfilAptoAdulto">Adulto</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="perfilAptoAltaPerformance">
+                                                <label class="form-check-label" for="perfilAptoAltaPerformance">Alta Performance</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="perfilAptoHidroginastica">
+                                                <label class="form-check-label" for="perfilAptoHidroginastica">Hidroginástica</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="perfilAptoPcd">
+                                                <label class="form-check-label" for="perfilAptoPcd">PCD</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label for="perfilValidadeSalvamento" class="form-label fw-500">Validade Salvamento Aquático</label>
+                                        <input type="date" class="form-control" id="perfilValidadeSalvamento">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="perfilValidadePrimeirosSocorros" class="form-label fw-500">Validade Primeiros Socorros / RCP</label>
+                                        <input type="date" class="form-control" id="perfilValidadePrimeirosSocorros">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SEÇÃO DE ALTERAÇÃO DE SENHA (Opcional) -->
+                            <h5 class="fw-700 mt-4 mb-3 border-top pt-3 border-secondary-subtle">
+                                <i class="bi bi-key me-2 text-accent"></i>Alterar Senha
+                            </h5>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label for="perfilSenhaAtual" class="form-label fw-500">Senha Atual</label>
+                                    <input type="password" class="form-control" id="perfilSenhaAtual" placeholder="Informe se deseja mudar a senha">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="perfilNovaSenha" class="form-label fw-500">Nova Senha</label>
+                                    <input type="password" class="form-control" id="perfilNovaSenha" placeholder="Min. 8 caracteres, maiúscula, número, esp.">
+                                </div>
+                            </div>
+
+                            <div class="mt-4 d-flex gap-2">
+                                <button type="button" class="btn-primary-custom" id="btnEditarPerfil" onclick="habilitarEdicaoPerfil(true)">
+                                    <i class="bi bi-pencil-square me-1"></i>Editar Perfil
+                                </button>
+                                <button type="submit" class="btn-primary-custom" id="btnSalvarPerfil" style="display: none">
+                                    <i class="bi bi-save me-1"></i>Salvar Alterações
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary rounded-pill px-3" id="btnCancelarEdicaoPerfil" onclick="habilitarEdicaoPerfil(false)" style="display: none">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -163,12 +375,24 @@
                         <div class="mb-3">
                             <label for="turmaModalidade" class="form-label fw-500">Modalidade</label>
                             <select class="form-select" id="turmaModalidade" required>
+                                <option value="Bebes">👶 Bebês</option>
                                 <option value="Infantil">🧒 Infantil</option>
                                 <option value="Adulto">🏊 Adulto</option>
+                                <option value="Alta Performance">🏆 Alta Performance</option>
                                 <option value="Hidroginastica">💧 Hidroginástica</option>
+                                <option value="PCD">♿ PCD</option>
                                 <option value="Livre">🌊 Livre</option>
                             </select>
                         </div>
+                        
+                        <!-- Campo Professor (Exibido apenas para Admin) -->
+                        <div class="mb-3 admin-only" id="grupoTurmaProfessor" style="display:none">
+                            <label for="turmaProfessorId" class="form-label fw-500">Professor</label>
+                            <select class="form-select" id="turmaProfessorId">
+                                <option value="">Selecione um Professor...</option>
+                            </select>
+                        </div>
+
                         <div class="row g-3 mb-3">
                             <div class="col-6">
                                 <label for="turmaInicio" class="form-label fw-500">Início</label>
@@ -231,15 +455,10 @@
                             <label for="usuarioEmail" class="form-label fw-500">E-mail</label>
                             <input type="email" class="form-control" id="usuarioEmail" required placeholder="email@exemplo.com">
                         </div>
-                        <div class="mb-3">
-                            <label for="usuarioSenha" class="form-label fw-500">Senha</label>
-                            <input type="password" class="form-control" id="usuarioSenha" required minlength="8"
-                                placeholder="Mín. 8 chars: maiúsc, minúsc, número, especial"
-                                pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#]).{8,}$">
-                        </div>
+
                         <div class="mb-3">
                             <label for="usuarioRole" class="form-label fw-500">Perfil</label>
-                            <select class="form-select" id="usuarioRole" required onchange="toggleAlunoFields()">
+                            <select class="form-select" id="usuarioRole" required onchange="toggleRoleFields()">
                                 <option value="Aluno">🏊 Aluno</option>
                                 <option value="Professor">👨‍🏫 Professor</option>
                             </select>
@@ -250,7 +469,7 @@
                             <div class="row g-3 mb-3">
                                 <div class="col-6">
                                     <label for="usuarioDataNascimento" class="form-label fw-500">Data de Nascimento</label>
-                                    <input type="date" class="form-control" id="usuarioDataNascimento" onchange="checkMinorStatus()">
+                                    <input type="date" class="form-control" id="usuarioDataNascimento" onchange="checkMinorStatus()" oninput="checkMinorStatus()">
                                 </div>
                                 <div class="col-6">
                                     <label for="usuarioTelefone" class="form-label fw-500">Telefone</label>
@@ -282,6 +501,85 @@
                                 <label for="usuarioProblemasSaude" class="form-label fw-500">Problemas / Condições de Saúde</label>
                                 <textarea class="form-control" id="usuarioProblemasSaude" rows="2" placeholder="Descreva problemas de saúde se houver, ou deixe em branco"></textarea>
                             </div>
+
+                            <div class="mb-3">
+                                <label for="usuarioNivelPedagogico" class="form-label fw-500">Nível Pedagógico</label>
+                                <select class="form-select" id="usuarioNivelPedagogico">
+                                    <option value="Iniciante">🏊 Iniciante</option>
+                                    <option value="Intermediário">🏊 Intermediário</option>
+                                    <option value="Avançado">🏊 Avançado</option>
+                                    <option value="Alta Performance">🏆 Alta Performance</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- CAMPOS EXCLUSIVOS DE PROFESSOR -->
+                        <div id="professorFields" style="display: none;">
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label for="usuarioCref" class="form-label fw-500">CREF</label>
+                                    <input type="text" class="form-control" id="usuarioCref" placeholder="Ex: 012345-G/SP">
+                                </div>
+                                <div class="col-6 d-flex align-items-end">
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" id="usuarioCrefAtivo" checked>
+                                        <label class="form-check-label fw-500" for="usuarioCrefAtivo">CREF Ativo</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-500 d-block">Aptidões (Matriz de Aptidão)</label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="usuarioAptoBebes">
+                                            <label class="form-check-label" for="usuarioAptoBebes">Bebês</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="usuarioAptoInfantil">
+                                            <label class="form-check-label" for="usuarioAptoInfantil">Infantil</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="usuarioAptoAdulto">
+                                            <label class="form-check-label" for="usuarioAptoAdulto">Adulto</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="usuarioAptoAltaPerformance">
+                                            <label class="form-check-label" for="usuarioAptoAltaPerformance">Alta Performance</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="usuarioAptoHidroginastica">
+                                            <label class="form-check-label" for="usuarioAptoHidroginastica">Hidroginástica</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="usuarioAptoPcd">
+                                            <label class="form-check-label" for="usuarioAptoPcd">PCD</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label for="usuarioValidadeSalvamento" class="form-label fw-500">Salvamento Aquático</label>
+                                    <input type="date" class="form-control" id="usuarioValidadeSalvamento">
+                                </div>
+                                <div class="col-6">
+                                    <label for="usuarioValidadePrimeirosSocorros" class="form-label fw-500">Primeiros Socorros / RCP</label>
+                                    <input type="date" class="form-control" id="usuarioValidadePrimeirosSocorros">
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer border-0">
@@ -295,18 +593,50 @@
         </div>
     </div>
 
-    <!-- TOAST -->
-    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
-        <div id="appToast" class="toast align-items-center border-0" role="alert">
-            <div class="d-flex">
-                <div class="toast-body fw-500" id="toastMessage"></div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    <!-- MODAL: Alterar Nível Pedagógico (Professor / Admin) -->
+    <div class="modal fade" id="nivelModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content glass-card border-0">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-700">
+                        <i class="bi bi-award me-2 text-accent"></i>Nível Pedagógico
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="nivelForm" onsubmit="handleNivelSubmit(event)">
+                    <div class="modal-body">
+                        <input type="hidden" id="nivelUsuarioId">
+                        <div class="mb-3">
+                            <label for="alunoNivelSelect" class="form-label fw-500">Selecione o Nível</label>
+                            <select class="form-select" id="alunoNivelSelect" required>
+                                <option value="Iniciante">🏊 Iniciante</option>
+                                <option value="Intermediário">🏊 Intermediário</option>
+                                <option value="Avançado">🏊 Avançado</option>
+                                <option value="Alta Performance">🏆 Alta Performance</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-3 btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-accent rounded-pill px-4 btn-sm fw-600">
+                            Salvar
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- TOAST -->
+    <div class="toast-container">
+        <div id="appToast" class="toast" role="alert">
+            <div class="d-flex">
+                <div class="toast-body fw-500" id="toastMessage"></div>
+                <button type="button" class="btn-close"></button>
+            </div>
+        </div>
+    </div>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
-    <script src="app.js"></script>
+    <script type="module" src="js/app.js?v=2.0.2"></script>
 </body>
 </html>

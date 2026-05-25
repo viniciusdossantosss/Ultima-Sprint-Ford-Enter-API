@@ -74,6 +74,22 @@ namespace NatacaoAPI.Models
         [MaxLength(500)]
         public string? ProblemasSaude { get; set; }
 
+        // ─── Cadastro de Professor (CREF, Aptidões e Certificações) ──
+        [MaxLength(50)]
+        public string? Cref { get; set; }
+
+        public bool CrefAtivo { get; set; } = false;
+
+        public bool AptoBebes { get; set; } = false;
+        public bool AptoInfantil { get; set; } = false;
+        public bool AptoAdulto { get; set; } = false;
+        public bool AptoAltaPerformance { get; set; } = false;
+        public bool AptoHidroginastica { get; set; } = false;
+        public bool AptoPcd { get; set; } = false;
+
+        public DateTime? ValidadeSalvamentoAquatico { get; set; }
+        public DateTime? ValidadePrimeirosSocorros { get; set; }
+
         // ─── Navegação ──────────────────────────────────────────────
         // Turmas que este usuário leciona (quando Role == Professor)
         public ICollection<Turma> TurmasLecionadas { get; set; } = new List<Turma>();

@@ -1,20 +1,31 @@
+using System;
+using System.ComponentModel.DataAnnotations;
+
 namespace NatacaoAPI.DTOs.Usuario
 {
-    public class UsuarioResponseDTO
+    /// <summary>
+    /// DTO para atualização de cadastro de usuário pelo Admin.
+    /// Não contém o campo Senha por motivos de segurança e boas práticas.
+    /// </summary>
+    public class UsuarioUpdateDTO
     {
-        public int Id { get; set; }
+        [Required(ErrorMessage = "O nome é obrigatório.")]
+        [MaxLength(100)]
         public string Nome { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "O e-mail é obrigatório.")]
+        [EmailAddress(ErrorMessage = "E-mail inválido.")]
+        [MaxLength(150)]
         public string Email { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty;
-        public DateTime DataCriacao { get; set; }
+
+        // Campos específicos para Aluno
         public DateTime? DataNascimento { get; set; }
-        public string? NivelPedagogico { get; set; }
-        public string? ModalidadeSugerida { get; set; }
         public string? Telefone { get; set; }
         public string? NomeResponsavel { get; set; }
         public string? TelefoneResponsavel { get; set; }
         public bool DocumentacaoSaudeEntregue { get; set; }
         public string? ProblemasSaude { get; set; }
+        public string? NivelPedagogico { get; set; }
 
         // Campos opcionais/específicos para Professor
         public string? Cref { get; set; }

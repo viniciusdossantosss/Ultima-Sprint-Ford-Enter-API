@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace NatacaoAPI.DTOs.Turma
 {
     /// <summary>
@@ -16,5 +18,8 @@ namespace NatacaoAPI.DTOs.Turma
         public int VagasDisponiveis { get; set; }
         public int ProfessorId { get; set; }
         public string ProfessorNome { get; set; } = string.Empty;
+        public bool ProfessorCertificacaoExpirada { get; set; }
+        public string? ProfessorInconformidadeMensagem { get; set; }
+        public List<AlunoInscritoDTO> AlunosInscritos { get; set; } = new();
     }
 }
