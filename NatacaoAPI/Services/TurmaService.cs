@@ -20,11 +20,13 @@ namespace NatacaoAPI.Services
     {
         private readonly ITurmaRepository _turmaRepository;
         private readonly IMapper _mapper;
+        private readonly IUsuarioRepository _usuarioRepository;
 
-        public TurmaService(ITurmaRepository turmaRepository, IMapper mapper)
+        public TurmaService(ITurmaRepository turmaRepository, IMapper mapper, IUsuarioRepository usuarioRepository)
         {
             _turmaRepository = turmaRepository;
             _mapper = mapper;
+            _usuarioRepository = usuarioRepository;
         }
 
         public async Task<IEnumerable<TurmaResponseDTO>> GetAllAsync()
@@ -73,9 +75,13 @@ namespace NatacaoAPI.Services
             var turma = await _turmaRepository.GetByIdAsync(id);
             if (turma == null) return null;
 
-            // Validar ownership — Professor só pode editar suas próprias turmas
+            // Validar ownership — Professor só pode editar suas próprias turmas (Admin pode tudo)
             if (turma.ProfessorId != professorId)
-                throw new UnauthorizedAccessException("Você não tem permissão para editar esta turma.");
+            {
+                var performingUser = await _usuarioRepository.GetByIdAsync(professorId);
+                if (performingUser == null || performingUser.Role != UsuarioRole.Admin)
+                    throw new UnauthorizedAccessException("Você não tem permissão para editar esta turma.");
+            }
 
             // Atualizar campos mantendo Id e ProfessorId
             turma.Nome = updateDto.Nome;
@@ -98,9 +104,13 @@ namespace NatacaoAPI.Services
             var turma = await _turmaRepository.GetByIdAsync(id);
             if (turma == null) return false;
 
-            // Validar ownership — Professor só pode deletar suas próprias turmas
+            // Validar ownership — Professor só pode deletar suas próprias turmas (Admin pode tudo)
             if (turma.ProfessorId != professorId)
-                throw new UnauthorizedAccessException("Você não tem permissão para deletar esta turma.");
+            {
+                var performingUser = await _usuarioRepository.GetByIdAsync(professorId);
+                if (performingUser == null || performingUser.Role != UsuarioRole.Admin)
+                    throw new UnauthorizedAccessException("Você não tem permissão para deletar esta turma.");
+            }
 
             await _turmaRepository.DeleteAsync(turma);
             return true;

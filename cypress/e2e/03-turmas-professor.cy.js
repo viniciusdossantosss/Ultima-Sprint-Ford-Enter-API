@@ -71,6 +71,31 @@ describe('03 - Turmas (Professor)', () => {
         cy.get('.fc-event', { timeout: 10000 }).should('have.length.greaterThan', 0);
     });
 
+    it('Deve permitir Admin criar uma nova turma via modal', () => {
+        cy.clearLocalStorage();
+        cy.apiLogin('admin@natacao.com', 'Admin@123');
+        cy.visit('/dashboard.html');
+
+        cy.get('#btnNovaTurma').should('be.visible').click();
+        cy.get('#turmaModal').should('be.visible');
+
+        cy.get('#turmaNome').type('Turma Criada por Admin');
+        cy.get('#turmaDescricao').type('Turma criada pelo Admin via Cypress');
+        cy.get('#turmaModalidade').select('Adulto');
+
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const dateStr = tomorrow.toISOString().substring(0, 10);
+        cy.get('#turmaInicio').type(`${dateStr}T10:00`);
+        cy.get('#turmaFim').type(`${dateStr}T11:00`);
+        cy.get('#turmaCapacidade').clear().type('10');
+
+        cy.intercept('POST', '/api/turmas').as('createTurmaAdmin');
+        cy.get('#btnSaveTurma').click();
+        cy.wait('@createTurmaAdmin').its('response.statusCode').should('eq', 201);
+        cy.get('#appToast').should('be.visible');
+    });
+
     it('NÃO deve exibir Nova Turma para Aluno', () => {
         const alunoEmail = `aluno.noturma.${Date.now()}@test.com`;
         cy.apiCreateUser({ nome: 'Aluno No Turma', email: alunoEmail, senha: 'Aluno@123!', role: 'Aluno' }).then(res => {

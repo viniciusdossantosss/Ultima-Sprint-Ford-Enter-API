@@ -57,7 +57,7 @@ namespace NatacaoAPI.Controllers
         /// O ProfessorId é extraído automaticamente do token JWT.
         /// </summary>
         [HttpPost]
-        [Authorize(Roles = "Professor")]
+        [Authorize(Roles = "Professor,Admin")]
         [ProducesResponseType(typeof(TurmaResponseDTO), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -75,7 +75,7 @@ namespace NatacaoAPI.Controllers
         /// Atualiza uma turma existente. Somente Professor.
         /// </summary>
         [HttpPut("{id}")]
-        [Authorize(Roles = "Professor")]
+        [Authorize(Roles = "Professor,Admin")]
         [ProducesResponseType(typeof(TurmaResponseDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -94,7 +94,7 @@ namespace NatacaoAPI.Controllers
         /// Deleta uma turma. Somente Professor.
         /// </summary>
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Professor")]
+        [Authorize(Roles = "Professor,Admin")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
