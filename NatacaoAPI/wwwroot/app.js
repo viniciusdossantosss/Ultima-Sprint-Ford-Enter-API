@@ -188,7 +188,17 @@ function initDashboard() {
     // Load data
     initCalendar();
     loadReservas();
-    if (isAdmin) loadUsuarios();
+    if (isAdmin) {
+        loadUsuarios();
+        
+        const usuarioModalEl = document.getElementById('usuarioModal');
+        if (usuarioModalEl) {
+            usuarioModalEl.addEventListener('show.bs.modal', () => {
+                document.getElementById('usuarioForm').reset();
+                toggleAlunoFields();
+            });
+        }
+    }
 }
 
 // ─── Section Switching ────────────────────────────────────────
@@ -472,7 +482,7 @@ async function loadUsuarios() {
 
         const tbody = document.getElementById('usuariosBody');
         if (usuarios.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-secondary">Nenhum usuário cadastrado.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-secondary">Nenhum usuário cadastrado.</td></tr>`;
             return;
         }
 
@@ -484,10 +494,47 @@ async function loadUsuarios() {
                     <i class="bi bi-trash"></i></button>`
                 : '<span class="text-muted" title="Admin não pode ser excluído"><i class="bi bi-shield-lock"></i></span>';
 
+            // Coluna E-mail / Telefone
+            let emailTelefone = `<div>${escapeHtml(u.email)}</div>`;
+            if (u.telefone) {
+                emailTelefone += `<div class="text-secondary" style="font-size: 0.8rem;"><i class="bi bi-telephone me-1"></i>${escapeHtml(u.telefone)}</div>`;
+            }
+
+            // Coluna Detalhes Aluno
+            let detalhesAluno = '<span class="text-muted">-</span>';
+            if (u.role === 'Aluno') {
+                const idadeStr = u.dataNascimento ? `${calcularIdade(u.dataNascimento)} anos` : '';
+                detalhesAluno = `<div><span class="badge bg-secondary-subtle text-light">${u.nivelPedagogico || 'Iniciante'}</span></div>`;
+                if (u.modalidadeSugerida) {
+                    detalhesAluno += `<div class="text-secondary" style="font-size: 0.8rem;"><i class="bi bi-tag me-1"></i>Sugerido: ${escapeHtml(u.modalidadeSugerida)} (${idadeStr})</div>`;
+                }
+                if (u.nomeResponsavel) {
+                    detalhesAluno += `<div class="text-info mt-1" style="font-size: 0.75rem; line-height: 1.1;" title="Telefone do Responsável: ${u.telefoneResponsavel}">
+                        <i class="bi bi-shield-fill-check me-1"></i>Resp: ${escapeHtml(u.nomeResponsavel)} (${escapeHtml(u.telefoneResponsavel)})
+                    </div>`;
+                }
+            }
+
+            // Coluna Saúde / Doc
+            let saudeDoc = '<span class="text-muted">-</span>';
+            if (u.role === 'Aluno') {
+                const badgeDoc = u.documentacaoSaudeEntregue
+                    ? '<span class="badge bg-success-subtle text-success" style="font-size: 0.75rem;"><i class="bi bi-check-circle me-1"></i>Doc. OK</span>'
+                    : '<span class="badge bg-warning-subtle text-warning" style="font-size: 0.75rem;"><i class="bi bi-exclamation-circle me-1"></i>Doc. Pendente</span>';
+                
+                const badgeProblema = u.problemasSaude
+                    ? `<div class="text-danger mt-1" style="font-size: 0.75rem; line-height: 1.1;" title="${escapeHtml(u.problemasSaude)}"><i class="bi bi-heart-pulse me-1"></i>Restrição: ${escapeHtml(u.problemasSaude)}</div>`
+                    : '<div class="text-success mt-1" style="font-size: 0.75rem;"><i class="bi bi-heart-fill me-1"></i>Sem restrições</div>';
+                
+                saudeDoc = `<div>${badgeDoc}</div>${badgeProblema}`;
+            }
+
             return `<tr>
                 <td class="fw-600">${escapeHtml(u.nome)}</td>
-                <td>${escapeHtml(u.email)}</td>
+                <td>${emailTelefone}</td>
                 <td>${roleBadge}</td>
+                <td>${detalhesAluno}</td>
+                <td>${saudeDoc}</td>
                 <td>${data}</td>
                 <td class="text-end">${deleteBtn}</td>
             </tr>`;
@@ -500,14 +547,26 @@ async function handleCreateUsuario(e) {
     const btn = e.target.querySelector('button[type="submit"]');
     if (btn) btn.disabled = true;
     try {
+        const role = document.getElementById('usuarioRole').value;
+        const payload = {
+            nome: document.getElementById('usuarioNome').value,
+            email: document.getElementById('usuarioEmail').value,
+            senha: document.getElementById('usuarioSenha').value,
+            role: role
+        };
+
+        if (role === 'Aluno') {
+            payload.dataNascimento = document.getElementById('usuarioDataNascimento').value || null;
+            payload.telefone = document.getElementById('usuarioTelefone').value || null;
+            payload.nomeResponsavel = document.getElementById('usuarioNomeResponsavel').value || null;
+            payload.telefoneResponsavel = document.getElementById('usuarioTelefoneResponsavel').value || null;
+            payload.documentacaoSaudeEntregue = document.getElementById('usuarioDocSaude').checked;
+            payload.problemasSaude = document.getElementById('usuarioProblemasSaude').value || null;
+        }
+
         const res = await apiFetch('/usuarios', {
             method: 'POST',
-            body: JSON.stringify({
-                nome: document.getElementById('usuarioNome').value,
-                email: document.getElementById('usuarioEmail').value,
-                senha: document.getElementById('usuarioSenha').value,
-                role: document.getElementById('usuarioRole').value
-            })
+            body: JSON.stringify(payload)
         });
 
         if (!res.ok) {
@@ -523,6 +582,83 @@ async function handleCreateUsuario(e) {
     finally {
         if (btn) btn.disabled = false;
     }
+}
+
+// ─── Auxiliares de Cadastro de Aluno ────────────────────────
+function toggleAlunoFields() {
+    const role = document.getElementById('usuarioRole').value;
+    const alunoFields = document.getElementById('alunoFields');
+    const dataNascimento = document.getElementById('usuarioDataNascimento');
+    const telefone = document.getElementById('usuarioTelefone');
+    
+    if (role === 'Aluno') {
+        alunoFields.style.display = '';
+        dataNascimento.required = true;
+        telefone.required = true;
+        checkMinorStatus();
+    } else {
+        alunoFields.style.display = 'none';
+        dataNascimento.required = false;
+        telefone.required = false;
+        
+        // Limpar campos
+        dataNascimento.value = '';
+        telefone.value = '';
+        document.getElementById('usuarioNomeResponsavel').value = '';
+        document.getElementById('usuarioTelefoneResponsavel').value = '';
+        document.getElementById('usuarioDocSaude').checked = false;
+        document.getElementById('usuarioProblemasSaude').value = '';
+        
+        document.getElementById('grupoResponsavel').style.display = 'none';
+        document.getElementById('usuarioNomeResponsavel').required = false;
+        document.getElementById('usuarioTelefoneResponsavel').required = false;
+    }
+}
+
+function checkMinorStatus() {
+    const dobValue = document.getElementById('usuarioDataNascimento').value;
+    const grupoResponsavel = document.getElementById('grupoResponsavel');
+    const nomeResp = document.getElementById('usuarioNomeResponsavel');
+    const telResp = document.getElementById('usuarioTelefoneResponsavel');
+    
+    if (!dobValue) {
+        grupoResponsavel.style.display = 'none';
+        nomeResp.required = false;
+        telResp.required = false;
+        return;
+    }
+    
+    const dob = new Date(dobValue);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+        age--;
+    }
+    
+    if (age < 18) {
+        grupoResponsavel.style.display = '';
+        nomeResp.required = true;
+        telResp.required = true;
+    } else {
+        grupoResponsavel.style.display = 'none';
+        nomeResp.required = false;
+        telResp.required = false;
+        nomeResp.value = '';
+        telResp.value = '';
+    }
+}
+
+function calcularIdade(dobString) {
+    if (!dobString) return 0;
+    const dob = new Date(dobString);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+        age--;
+    }
+    return age;
 }
 
 async function deleteUsuario(id, nome) {

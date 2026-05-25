@@ -25,5 +25,13 @@ namespace NatacaoAPI.DTOs.Usuario
 
         [Required(ErrorMessage = "O perfil é obrigatório.")]
         public string Role { get; set; } = "Aluno";
+
+        // Campos opcionais/específicos para Aluno
+        public DateTime? DataNascimento { get; set; }
+        public string? Telefone { get; set; }
+        public string? NomeResponsavel { get; set; }
+        public string? TelefoneResponsavel { get; set; }
+        public bool DocumentacaoSaudeEntregue { get; set; }
+        public string? ProblemasSaude { get; set; }
     }
 }

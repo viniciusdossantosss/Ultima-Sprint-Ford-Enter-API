@@ -122,14 +122,16 @@
                         <thead>
                             <tr>
                                 <th>Nome</th>
-                                <th>E-mail</th>
+                                <th>E-mail / Telefone</th>
                                 <th>Perfil</th>
+                                <th>Detalhes Aluno</th>
+                                <th>Saúde / Doc.</th>
                                 <th>Cadastrado em</th>
                                 <th class="text-end">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="usuariosBody">
-                            <tr><td colspan="5" class="text-center py-4 text-secondary">Carregando...</td></tr>
+                            <tr><td colspan="7" class="text-center py-4 text-secondary">Carregando...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -237,10 +239,49 @@
                         </div>
                         <div class="mb-3">
                             <label for="usuarioRole" class="form-label fw-500">Perfil</label>
-                            <select class="form-select" id="usuarioRole" required>
+                            <select class="form-select" id="usuarioRole" required onchange="toggleAlunoFields()">
                                 <option value="Aluno">🏊 Aluno</option>
                                 <option value="Professor">👨‍🏫 Professor</option>
                             </select>
+                        </div>
+                        
+                        <!-- CAMPOS EXCLUSIVOS DE ALUNO -->
+                        <div id="alunoFields" style="display: none;">
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label for="usuarioDataNascimento" class="form-label fw-500">Data de Nascimento</label>
+                                    <input type="date" class="form-control" id="usuarioDataNascimento" onchange="checkMinorStatus()">
+                                </div>
+                                <div class="col-6">
+                                    <label for="usuarioTelefone" class="form-label fw-500">Telefone</label>
+                                    <input type="text" class="form-control" id="usuarioTelefone" placeholder="(00) 00000-0000">
+                                </div>
+                            </div>
+
+                            <!-- Dados do Responsável (Exibido apenas se menor de 18 anos) -->
+                            <div id="grupoResponsavel" class="border border-secondary-subtle rounded p-3 mb-3" style="display: none; background: rgba(255,255,255,0.03);">
+                                <h6 class="fw-600 mb-3 text-accent" style="font-size: 0.9rem;">
+                                    <i class="bi bi-shield-fill-check me-1"></i>Responsável Legal (Menor de Idade)
+                                </h6>
+                                <div class="mb-3">
+                                    <label for="usuarioNomeResponsavel" class="form-label fw-500">Nome do Responsável</label>
+                                    <input type="text" class="form-control" id="usuarioNomeResponsavel" placeholder="Nome completo do responsável">
+                                </div>
+                                <div>
+                                    <label for="usuarioTelefoneResponsavel" class="form-label fw-500">Telefone do Responsável</label>
+                                    <input type="text" class="form-control" id="usuarioTelefoneResponsavel" placeholder="(00) 00000-0000">
+                                </div>
+                            </div>
+
+                            <div class="mb-3 form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="usuarioDocSaude">
+                                <label class="form-check-label fw-500" for="usuarioDocSaude">Documentação de Saúde Entregue</label>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="usuarioProblemasSaude" class="form-label fw-500">Problemas / Condições de Saúde</label>
+                                <textarea class="form-control" id="usuarioProblemasSaude" rows="2" placeholder="Descreva problemas de saúde se houver, ou deixe em branco"></textarea>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer border-0">

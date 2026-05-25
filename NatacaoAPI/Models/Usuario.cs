@@ -51,6 +51,29 @@ namespace NatacaoAPI.Models
         public string? ResetToken { get; set; }
         public DateTime? ResetTokenExpiry { get; set; }
 
+        // ─── Cadastro de Aluno (Idade e Saúde) ─────────────────────
+        public DateTime? DataNascimento { get; set; }
+
+        [MaxLength(50)]
+        public string? NivelPedagogico { get; set; }
+
+        [MaxLength(50)]
+        public string? ModalidadeSugerida { get; set; }
+
+        [MaxLength(20)]
+        public string? Telefone { get; set; }
+
+        [MaxLength(100)]
+        public string? NomeResponsavel { get; set; }
+
+        [MaxLength(20)]
+        public string? TelefoneResponsavel { get; set; }
+
+        public bool DocumentacaoSaudeEntregue { get; set; } = false;
+
+        [MaxLength(500)]
+        public string? ProblemasSaude { get; set; }
+
         // ─── Navegação ──────────────────────────────────────────────
         // Turmas que este usuário leciona (quando Role == Professor)
         public ICollection<Turma> TurmasLecionadas { get; set; } = new List<Turma>();

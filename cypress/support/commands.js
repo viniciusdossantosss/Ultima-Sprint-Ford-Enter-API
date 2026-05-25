@@ -24,12 +24,17 @@ Cypress.Commands.add('uiLogin', (email, senha) => {
 
 // Criar usuário via API (como admin)
 Cypress.Commands.add('apiCreateUser', (userData) => {
+    const payload = { ...userData };
+    if (payload.role === 'Aluno') {
+        if (!payload.dataNascimento) payload.dataNascimento = '2000-01-01';
+        if (!payload.telefone) payload.telefone = '(11) 99999-9999';
+    }
     return cy.apiLogin('admin@natacao.com', 'Admin@123').then(admin => {
         return cy.request({
             method: 'POST',
             url: '/api/usuarios',
             headers: { Authorization: `Bearer ${admin.token}` },
-            body: userData,
+            body: payload,
             failOnStatusCode: false
         });
     });

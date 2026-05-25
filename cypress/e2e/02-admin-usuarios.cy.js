@@ -50,11 +50,47 @@ describe('02 - Gestão de Usuários (Admin)', () => {
         cy.get('#usuarioSenha').type('Aluno@123!');
         cy.get('#usuarioRole').select('Aluno');
 
+        // Preencher novos campos obrigatórios
+        cy.get('#usuarioDataNascimento').type('2000-01-01');
+        cy.get('#usuarioTelefone').type('(11) 99999-9999');
+
         cy.intercept('POST', '/api/usuarios').as('createUser');
         cy.get('#btnSaveUsuario').click();
         cy.wait('@createUser').then(interception => {
             expect(interception.response.statusCode).to.eq(201);
             createdUserIds.push(interception.response.body.id);
+        });
+    });
+
+    it('Deve exigir e preencher dados do responsável se o Aluno for menor de idade', () => {
+        cy.get('[data-section="usuarios"]').click();
+        cy.get('#btnNovoUsuario').click();
+
+        cy.get('#usuarioNome').type('Aluno Menor Test');
+        cy.get('#usuarioEmail').type(`menor.cypress.${Date.now()}@test.com`);
+        cy.get('#usuarioSenha').type('Aluno@123!');
+        cy.get('#usuarioRole').select('Aluno');
+        
+        // Define data de nascimento para menor de idade (ex: 10 anos atrás)
+        const anoMenor = new Date().getFullYear() - 10;
+        cy.get('#usuarioDataNascimento').type(`${anoMenor}-01-01`);
+        
+        // Grupo do responsável deve estar visível
+        cy.get('#grupoResponsavel').should('be.visible');
+        
+        cy.get('#usuarioTelefone').type('(11) 98888-8888');
+        cy.get('#usuarioNomeResponsavel').type('Responsável Cypress');
+        cy.get('#usuarioTelefoneResponsavel').type('(11) 97777-7777');
+        cy.get('#usuarioDocSaude').check();
+        cy.get('#usuarioProblemasSaude').type('Asma leve');
+
+        cy.intercept('POST', '/api/usuarios').as('createUserMinor');
+        cy.get('#btnSaveUsuario').click();
+        cy.wait('@createUserMinor').then(interception => {
+            expect(interception.response.statusCode).to.eq(201);
+            createdUserIds.push(interception.response.body.id);
+            expect(interception.response.body.nomeResponsavel).to.eq('Responsável Cypress');
+            expect(interception.response.body.modalidadeSugerida).to.eq('Infantil');
         });
     });
 
