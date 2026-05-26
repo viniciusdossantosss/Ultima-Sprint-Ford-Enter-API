@@ -17,8 +17,24 @@ export function initCalendar() {
     // Utilizando o FullCalendar injetado globalmente na página
     calendarInstance = new window.FullCalendar.Calendar(calendarEl, {
         locale: 'pt-br',
-        initialView: 'dayGridMonth',
-        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' },
+        initialView: window.innerWidth < 768 ? 'listWeek' : 'dayGridMonth',
+        customButtons: {
+            todayCustom: {
+                text: 'Hoje',
+                click: function() {
+                    if (calendarInstance) {
+                        calendarInstance.today();
+                    }
+                }
+            }
+        },
+        headerToolbar: { left: 'prev,next todayCustom', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' },
+        buttonText: {
+            month: 'Mês',
+            week: 'Semana',
+            day: 'Dia',
+            list: 'Lista'
+        },
         height: 'auto',
         events: fetchTurmas,
         eventClick: handleEventClick,

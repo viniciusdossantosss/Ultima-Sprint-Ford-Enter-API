@@ -721,11 +721,16 @@ h1, h2, h3, h4, h5, h6, .nav-brand-text, .brand-title {
 .btn-action.reservar:hover { background: var(--accent-subtle); border-color: rgba(6,182,212,0.3); color: var(--accent); }
 
 /* ─── Calendar ────────────────────────────────────────────── */
+.fc {
+    --fc-page-bg-color: transparent !important;
+    --fc-border-color: rgba(255, 255, 255, 0.06) !important;
+}
 #calendar { min-height: 550px; }
 .fc-theme-standard td, .fc-theme-standard th { border-color: rgba(255,255,255,0.06) !important; }
 .fc-theme-standard .fc-scrollgrid { border-color: rgba(255,255,255,0.06) !important; }
+.fc-theme-standard th { background-color: transparent !important; }
 .fc-col-header-cell {
-    background: rgba(255, 255, 255, 0.015);
+    background: rgba(10, 18, 36, 0.45) !important;
     padding: 10px 0 !important;
 }
 .fc-col-header-cell-cushion {
@@ -751,6 +756,16 @@ h1, h2, h3, h4, h5, h6, .nav-brand-text, .brand-title {
 .fc .fc-button-primary { background: var(--accent-dark); border-color: var(--accent-dark); }
 .fc .fc-button-primary:hover { background: var(--accent); border-color: var(--accent); }
 .fc .fc-button-primary:not(:disabled).fc-button-active { background: #0077b3; border-color: #0077b3; }
+.fc .fc-icon-chevron-left::before {
+    content: "\f284" !important;
+    font-family: 'bootstrap-icons' !important;
+    font-style: normal !important;
+}
+.fc .fc-icon-chevron-right::before {
+    content: "\f285" !important;
+    font-family: 'bootstrap-icons' !important;
+    font-style: normal !important;
+}
 .fc-event {
     cursor: pointer;
     border: none !important;
@@ -787,6 +802,11 @@ h1, h2, h3, h4, h5, h6, .nav-brand-text, .brand-title {
 .fc-list-day {
     background: rgba(255, 255, 255, 0.02) !important;
 }
+.fc-list-day td,
+.fc-list-day-cushion {
+    background: transparent !important;
+    background-color: transparent !important;
+}
 .fc-list-day-text, .fc-list-day-side-text {
     font-family: 'Outfit', sans-serif !important;
     font-weight: 700 !important;
@@ -819,6 +839,9 @@ h1, h2, h3, h4, h5, h6, .nav-brand-text, .brand-title {
 
 /* ─── Forms (modal / dashboard) ────────────────────────────── */
 .form-control, .form-select {
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 0.9rem;
     background: rgba(6,10,20,0.6); border: 1px solid var(--glass-border);
     color: var(--text-primary); border-radius: var(--radius-sm); transition: var(--transition);
 }
@@ -867,6 +890,141 @@ h1, h2, h3, h4, h5, h6, .nav-brand-text, .brand-title {
     .dashboard-main { padding: 72px 12px 24px; }
     .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
     .auth-card { padding: 24px; }
+
+    /* FullCalendar Responsive Toolbar */
+    .fc .fc-toolbar {
+        flex-direction: column !important;
+        gap: 12px !important;
+        align-items: center !important;
+    }
+    .fc .fc-toolbar-title {
+        font-size: 1.2rem !important;
+        text-align: center !important;
+        margin: 6px 0 !important;
+    }
+    .fc .fc-toolbar-chunk {
+        display: flex !important;
+        justify-content: center !important;
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+    }
+
+    /* Hide event text in month view on mobile and display as small colored dots */
+    .fc .fc-daygrid-view .fc-daygrid-event {
+        margin: 2px auto !important;
+        width: 8px !important;
+        height: 8px !important;
+        min-height: 8px !important;
+        border-radius: 50% !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        display: block !important;
+    }
+    .fc .fc-daygrid-view .fc-event-title,
+    .fc .fc-daygrid-view .fc-event-time {
+        display: none !important;
+    }
+    .fc .fc-daygrid-view .fc-daygrid-event-harness {
+        display: inline-block !important;
+        margin: 1px 2px !important;
+    }
+    .fc .fc-daygrid-view .fc-daygrid-day-events {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        padding: 2px !important;
+    }
+
+    /* Stack search inputs and action buttons in section headers on mobile */
+    .section-header .d-flex {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        width: 100% !important;
+        gap: 12px !important;
+    }
+    .section-header .d-flex > div,
+    .section-header .d-flex > button,
+    .section-header .d-flex > a {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+    .section-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+
+    /* Responsive Stacked Tables (Cards on Mobile) */
+    .table-responsive {
+        border: none !important;
+        overflow-x: visible !important;
+    }
+    .table-responsive .custom-table {
+        min-width: 100% !important;
+        border-spacing: 0 12px !important;
+    }
+    .table-responsive .custom-table thead {
+        display: none !important;
+    }
+    .table-responsive .custom-table tbody,
+    .table-responsive .custom-table tr,
+    .table-responsive .custom-table td {
+        display: block !important;
+        width: 100% !important;
+    }
+    .table-responsive .custom-table tr {
+        background: rgba(10, 18, 36, 0.45) !important;
+        border: 1px solid var(--glass-border) !important;
+        border-radius: var(--radius) !important;
+        padding: 16px 20px !important;
+        margin-bottom: 12px !important;
+        box-shadow: var(--glass-shadow);
+        box-sizing: border-box !important;
+    }
+    .table-responsive .custom-table td {
+        padding: 8px 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        text-align: left !important;
+        font-size: 0.88rem !important;
+        box-sizing: border-box !important;
+    }
+    /* Style the first td as card header */
+    .table-responsive .custom-table tr:not(:has(.empty-state-container)) td:first-child {
+        font-size: 1.05rem !important;
+        font-weight: 700 !important;
+        color: var(--accent) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+        padding-bottom: 12px !important;
+        margin-bottom: 8px !important;
+    }
+    /* Style the last td (Actions) */
+    .table-responsive .custom-table tr:not(:has(.empty-state-container)) td:last-child {
+        border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+        padding-top: 12px !important;
+        margin-top: 8px !important;
+        text-align: right !important;
+        display: flex !important;
+        justify-content: flex-end !important;
+        gap: 8px;
+    }
+    
+    /* Empty table styling on mobile */
+    .table-responsive .custom-table tr:has(.empty-state-container) {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+    .table-responsive .custom-table tr:has(.empty-state-container) td {
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .stats-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
 }
 
 /* ─── Grid & Flex Utilities (Bootstrap Replacements) ────────── */
@@ -893,6 +1051,24 @@ h1, h2, h3, h4, h5, h6, .nav-brand-text, .brand-title {
 .col-12 { flex: 0 0 100%; max-width: 100%; }
 .col-6 { flex: 0 0 50%; max-width: 50%; }
 .col-4 { flex: 0 0 33.333333%; max-width: 33.333333%; }
+
+.table-responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.table-responsive .custom-table {
+    min-width: 800px;
+}
+/* Prevent horizontal scrolling on empty tables and center empty states */
+.table-responsive .custom-table:has(.empty-state-container) {
+    min-width: 100% !important;
+}
+.table-responsive .custom-table:has(.empty-state-container) thead {
+    display: none !important;
+}
+.ms-3 { margin-left: 16px !important; }
 
 @media (min-width: 768px) {
     .col-md-8 { flex: 0 0 66.666667%; max-width: 66.666667%; }
