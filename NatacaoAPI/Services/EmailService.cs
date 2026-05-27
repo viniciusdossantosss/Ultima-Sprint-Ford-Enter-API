@@ -52,9 +52,13 @@ namespace NatacaoAPI.Services
             await SendEmailAsync(toEmail, subject, body);
         }
 
-        public async Task SendPasswordResetEmailAsync(string toEmail, string nome, string resetToken)
+        public async Task SendPasswordResetEmailAsync(string toEmail, string nome, string resetToken, string? baseUrl = null)
         {
-            var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:5000";
+            var frontendUrl = baseUrl;
+            if (string.IsNullOrEmpty(frontendUrl))
+            {
+                frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:5000";
+            }
             var resetUrl = $"{frontendUrl}/?resetToken={resetToken}";
 
             var subject = "🔑 Redefinição de Senha — AquaSchedule";

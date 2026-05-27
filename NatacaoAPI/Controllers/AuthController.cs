@@ -50,7 +50,30 @@ namespace NatacaoAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            await _authService.ForgotPasswordAsync(request);
+            string? origin = Request.Headers["Origin"].ToString();
+            if (string.IsNullOrEmpty(origin))
+            {
+                origin = Request.Headers["Referer"].ToString();
+                if (!string.IsNullOrEmpty(origin))
+                {
+                    try
+                    {
+                        var uri = new Uri(origin);
+                        origin = $"{uri.Scheme}://{uri.Authority}";
+                    }
+                    catch
+                    {
+                        origin = null;
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(origin))
+            {
+                origin = $"{Request.Scheme}://{Request.Host}";
+            }
+
+            await _authService.ForgotPasswordAsync(request, origin);
             return Ok(new { message = "Se o e-mail estiver cadastrado, você receberá um link de recuperação." });
         }
 

@@ -10,6 +10,6 @@ namespace NatacaoAPI.Services.Interfaces
         /// <summary>
         /// Envia email com link de recuperação de senha.
         /// </summary>
-        Task SendPasswordResetEmailAsync(string toEmail, string nome, string resetToken);
+        Task SendPasswordResetEmailAsync(string toEmail, string nome, string resetToken, string? baseUrl = null);
     }
 }

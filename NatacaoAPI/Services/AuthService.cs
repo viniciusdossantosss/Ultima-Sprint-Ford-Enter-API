@@ -98,7 +98,7 @@ namespace NatacaoAPI.Services
             };
         }
 
-        public async Task ForgotPasswordAsync(ForgotPasswordDTO request)
+        public async Task ForgotPasswordAsync(ForgotPasswordDTO request, string? baseUrl = null)
         {
             var usuario = await _usuarioRepository.GetByEmailAsync(request.Email);
 
@@ -117,7 +117,7 @@ namespace NatacaoAPI.Services
             await _usuarioRepository.UpdateAsync(usuario);
 
             // Enviar email
-            await _emailService.SendPasswordResetEmailAsync(usuario.Email, usuario.Nome, resetToken);
+            await _emailService.SendPasswordResetEmailAsync(usuario.Email, usuario.Nome, resetToken, baseUrl);
 
             _logger.LogInformation("Token de recuperação de senha gerado para: {Email}", usuario.Email);
         }
