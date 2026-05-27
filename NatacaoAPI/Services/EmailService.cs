@@ -30,24 +30,46 @@ namespace NatacaoAPI.Services
         {
             var subject = "🏊 Bem-vindo ao AquaSchedule!";
             var body = $@"
-            <div style='font-family: Inter, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0a0e1a; color: #f1f5f9; padding: 40px; border-radius: 16px;'>
-                <div style='text-align: center; margin-bottom: 30px;'>
-                    <h1 style='color: #06b6d4; margin: 0;'>🏊 AquaSchedule</h1>
-                    <p style='color: #94a3b8; margin-top: 8px;'>Sistema de Aulas de Natação</p>
-                </div>
-                <h2 style='color: #f1f5f9;'>Olá, {nome}!</h2>
-                <p>Sua conta foi criada com sucesso. Aqui estão suas credenciais de acesso:</p>
-                <div style='background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 12px; padding: 20px; margin: 20px 0;'>
-                    <p><strong>📧 E-mail:</strong> {toEmail}</p>
-                    <p><strong>🔑 Senha temporária:</strong> {senhaTemporaria}</p>
-                </div>
-                <p style='color: #f59e0b;'>⚠️ Recomendamos alterar sua senha no primeiro acesso.</p>
-                <hr style='border-color: rgba(148, 163, 184, 0.1); margin: 30px 0;'>
-                <p style='color: #64748b; font-size: 0.85rem; text-align: center;'>
-                    Este email foi enviado automaticamente pelo AquaSchedule.<br>
-                    Se você não solicitou esta conta, ignore este email.
-                </p>
-            </div>";
+<!DOCTYPE html>
+<html lang='pt-BR'>
+<head><meta charset='UTF-8'></head>
+<body style='margin:0;padding:0;background-color:#0a0e1a;'>
+<table role='presentation' width='100%' cellpadding='0' cellspacing='0' border='0' style='background-color:#0a0e1a;'>
+  <tr><td align='center' style='padding:40px 20px;'>
+    <table role='presentation' width='600' cellpadding='0' cellspacing='0' border='0' style='max-width:600px;width:100%;background-color:#0a0e1a;border-radius:16px;'>
+      <tr><td style='text-align:center;padding:0 40px 30px;font-family:Inter,Arial,sans-serif;'>
+        <h1 style='color:#06b6d4;margin:0;font-size:28px;'>🏊 AquaSchedule</h1>
+        <p style='color:#94a3b8;margin-top:8px;font-size:14px;'>Sistema de Aulas de Natação</p>
+      </td></tr>
+      <tr><td style='padding:0 40px;font-family:Inter,Arial,sans-serif;color:#f1f5f9;'>
+        <h2 style='color:#f1f5f9;margin:0 0 12px;'>Olá, {nome}!</h2>
+        <p style='margin:0 0 20px;font-size:15px;line-height:1.6;'>Sua conta foi criada com sucesso. Aqui estão suas credenciais de acesso:</p>
+      </td></tr>
+      <tr><td style='padding:0 40px;font-family:Inter,Arial,sans-serif;'>
+        <table role='presentation' width='100%' cellpadding='0' cellspacing='0' border='0' style='background-color:#0d1a2a;border:1px solid #164e63;border-radius:12px;'>
+          <tr><td style='padding:20px;color:#f1f5f9;font-size:15px;'>
+            <p style='margin:0 0 8px;'><strong>📧 E-mail:</strong> {toEmail}</p>
+            <p style='margin:0;'><strong>🔑 Senha temporária:</strong> {senhaTemporaria}</p>
+          </td></tr>
+        </table>
+      </td></tr>
+      <tr><td style='padding:20px 40px 0;font-family:Inter,Arial,sans-serif;'>
+        <p style='color:#f59e0b;margin:0;font-size:14px;'>⚠️ Recomendamos alterar sua senha no primeiro acesso.</p>
+      </td></tr>
+      <tr><td style='padding:30px 40px 0;'>
+        <table role='presentation' width='100%' cellpadding='0' cellspacing='0' border='0'><tr><td style='border-top:1px solid #1e293b;'></td></tr></table>
+      </td></tr>
+      <tr><td style='padding:20px 40px 40px;font-family:Inter,Arial,sans-serif;text-align:center;'>
+        <p style='color:#64748b;font-size:13px;margin:0;line-height:1.5;'>
+          Este email foi enviado automaticamente pelo AquaSchedule.<br>
+          Se você não solicitou esta conta, ignore este email.
+        </p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>";
 
             await SendEmailAsync(toEmail, subject, body);
         }
@@ -63,25 +85,47 @@ namespace NatacaoAPI.Services
 
             var subject = "🔑 Redefinição de Senha — AquaSchedule";
             var body = $@"
-            <div style='font-family: Inter, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0a0e1a; color: #f1f5f9; padding: 40px; border-radius: 16px;'>
-                <div style='text-align: center; margin-bottom: 30px;'>
-                    <h1 style='color: #06b6d4; margin: 0;'>🏊 AquaSchedule</h1>
-                </div>
-                <h2 style='color: #f1f5f9;'>Olá, {nome}!</h2>
-                <p>Recebemos uma solicitação para redefinir sua senha.</p>
-                <div style='text-align: center; margin: 30px 0;'>
-                    <a href='{resetUrl}' style='background: linear-gradient(135deg, #0891b2, #06b6d4); color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;'>
-                        Redefinir Minha Senha
-                    </a>
-                </div>
-                <p style='color: #94a3b8; font-size: 0.9rem;'>Este link expira em <strong>30 minutos</strong>.</p>
-                <p style='color: #94a3b8; font-size: 0.9rem;'>Se o botão não funcionar, copie e cole este link no navegador:</p>
-                <p style='color: #06b6d4; word-break: break-all; font-size: 0.85rem;'>{resetUrl}</p>
-                <hr style='border-color: rgba(148, 163, 184, 0.1); margin: 30px 0;'>
-                <p style='color: #64748b; font-size: 0.85rem; text-align: center;'>
-                    Se você não solicitou esta redefinição, ignore este email.
-                </p>
-            </div>";
+<!DOCTYPE html>
+<html lang='pt-BR'>
+<head><meta charset='UTF-8'></head>
+<body style='margin:0;padding:0;background-color:#0a0e1a;'>
+<table role='presentation' width='100%' cellpadding='0' cellspacing='0' border='0' style='background-color:#0a0e1a;'>
+  <tr><td align='center' style='padding:40px 20px;'>
+    <table role='presentation' width='600' cellpadding='0' cellspacing='0' border='0' style='max-width:600px;width:100%;background-color:#0a0e1a;border-radius:16px;'>
+      <tr><td style='text-align:center;padding:0 40px 30px;font-family:Inter,Arial,sans-serif;'>
+        <h1 style='color:#06b6d4;margin:0;font-size:28px;'>🏊 AquaSchedule</h1>
+      </td></tr>
+      <tr><td style='padding:0 40px;font-family:Inter,Arial,sans-serif;color:#f1f5f9;'>
+        <h2 style='color:#f1f5f9;margin:0 0 12px;'>Olá, {nome}!</h2>
+        <p style='margin:0 0 20px;font-size:15px;line-height:1.6;'>Recebemos uma solicitação para redefinir sua senha.</p>
+      </td></tr>
+      <tr><td style='padding:0 40px 30px;text-align:center;font-family:Inter,Arial,sans-serif;'>
+        <table role='presentation' cellpadding='0' cellspacing='0' border='0' style='margin:0 auto;'>
+          <tr><td style='background-color:#0891b2;border-radius:8px;'>
+            <a href='{resetUrl}' style='display:inline-block;padding:14px 32px;color:#ffffff;font-family:Inter,Arial,sans-serif;font-size:16px;font-weight:600;text-decoration:none;border-radius:8px;'>
+              Redefinir Minha Senha
+            </a>
+          </td></tr>
+        </table>
+      </td></tr>
+      <tr><td style='padding:0 40px;font-family:Inter,Arial,sans-serif;'>
+        <p style='color:#94a3b8;font-size:14px;margin:0 0 8px;line-height:1.5;'>Este link expira em <strong style='color:#f1f5f9;'>30 minutos</strong>.</p>
+        <p style='color:#94a3b8;font-size:14px;margin:0 0 8px;line-height:1.5;'>Se o botão não funcionar, copie e cole este link no navegador:</p>
+        <p style='color:#06b6d4;word-break:break-all;font-size:13px;margin:0 0 20px;'><a href='{resetUrl}' style='color:#06b6d4;'>{resetUrl}</a></p>
+      </td></tr>
+      <tr><td style='padding:0 40px;'>
+        <table role='presentation' width='100%' cellpadding='0' cellspacing='0' border='0'><tr><td style='border-top:1px solid #1e293b;'></td></tr></table>
+      </td></tr>
+      <tr><td style='padding:20px 40px 40px;font-family:Inter,Arial,sans-serif;text-align:center;'>
+        <p style='color:#64748b;font-size:13px;margin:0;line-height:1.5;'>
+          Se você não solicitou esta redefinição, ignore este email.
+        </p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>";
 
             await SendEmailAsync(toEmail, subject, body);
         }

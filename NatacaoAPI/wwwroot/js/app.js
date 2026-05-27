@@ -4,7 +4,7 @@
 
 import { getCurrentUser } from './api.js';
 import { togglePasswordVisibility, calcularIdade } from './utils.js';
-import { handleLogin, showForgotPassword, showLogin, handleForgotPassword, handleResetPassword, logout } from './auth.js';
+import { handleLogin, showForgotPassword, showLogin, showResetPassword, handleForgotPassword, handleResetPassword, logout } from './auth.js';
 import { loadPerfil, habilitarEdicaoPerfil, handlePerfilSubmit, loadAlertasCertificacao } from './profile.js';
 import { initCalendar, handleTurmaSubmit, editarTurma, deletarTurma, populateProfessorsDropdown } from './calendar.js';
 import { loadReservas, criarReserva, cancelarReserva } from './reservas.js';
