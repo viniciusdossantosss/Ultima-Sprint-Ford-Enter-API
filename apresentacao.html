@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AquaSchedule — Apresentação Final Sprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   CSS CUSTOM PROPERTIES
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  --bg-primary: #0a0e1a;
+  --bg-secondary: #0f1628;
+  --bg-card: rgba(15, 25, 50, 0.6);
+  --bg-glass: rgba(20, 35, 70, 0.35);
+  --border-glass: rgba(56, 189, 248, 0.15);
+  --accent-1: #06b6d4;
+  --accent-2: #0ea5e9;
+  --accent-3: #38bdf8;
+  --accent-4: #22d3ee;
+  --accent-5: #67e8f9;
+  --accent-glow: rgba(6, 182, 212, 0.25);
+  --text-primary: #f0f9ff;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --green: #34d399;
+  --blue: #60a5fa;
+  --orange: #fbbf24;
+  --red: #f87171;
+  --purple: #a78bfa;
+  --pink: #f472b6;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESET & BASE
+   ═══════════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%; width: 100%;
+  overflow: hidden;
+  font-family: var(--font-body);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PROGRESS BAR
+   ═══════════════════════════════════════════════════════════════ */
+#progress-bar {
+  position: fixed; top: 0; left: 0; height: 3px; z-index: 1000;
+  background: linear-gradient(90deg, var(--accent-1), var(--accent-4), var(--accent-5));
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 15px var(--accent-glow), 0 0 30px rgba(6,182,212,0.1);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SLIDE COUNTER
+   ═══════════════════════════════════════════════════════════════ */
+#slide-counter {
+  position: fixed; top: 16px; right: 24px; z-index: 1000;
+  font-family: var(--font-mono); font-size: 0.85rem;
+  color: var(--text-muted);
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  padding: 6px 14px; border-radius: 20px;
+  border: 1px solid var(--border-glass);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NAVIGATION DOTS
+   ═══════════════════════════════════════════════════════════════ */
+#nav-dots {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  z-index: 1000; display: flex; gap: 8px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  padding: 8px 16px; border-radius: 30px;
+  border: 1px solid var(--border-glass);
+}
+.nav-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--text-muted);
+  border: none; cursor: pointer;
+  transition: all 0.3s ease;
+}
+.nav-dot:hover { background: var(--accent-3); transform: scale(1.3); }
+.nav-dot.active {
+  background: var(--accent-1);
+  box-shadow: 0 0 10px var(--accent-glow);
+  transform: scale(1.3);
+  width: 24px; border-radius: 5px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NAV ARROWS
+   ═══════════════════════════════════════════════════════════════ */
+.nav-arrow {
+  position: fixed; top: 50%; z-index: 1000;
+  transform: translateY(-50%);
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-glass);
+  color: var(--text-secondary);
+  width: 44px; height: 44px; border-radius: 50%;
+  font-size: 1.2rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.3s ease; opacity: 0.6;
+}
+.nav-arrow:hover { opacity: 1; color: var(--accent-3); border-color: var(--accent-1); }
+#prev-btn { left: 16px; }
+#next-btn { right: 16px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   SLIDES CONTAINER
+   ═══════════════════════════════════════════════════════════════ */
+#presentation { position: relative; width: 100%; height: 100%; overflow: hidden; }
+
+.slide {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 60px 48px 80px;
+  opacity: 0;
+  transform: translateX(40px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  pointer-events: none;
+  overflow-y: auto;
+}
+.slide.active {
+  opacity: 1; transform: translateX(0);
+  pointer-events: all;
+}
+.slide.exit-left {
+  opacity: 0; transform: translateX(-40px);
+}
+
+.slide-inner {
+  max-width: 1100px; width: 100%;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TYPOGRAPHY
+   ═══════════════════════════════════════════════════════════════ */
+.slide-title {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 800;
+  margin-bottom: 0.3em;
+  background: linear-gradient(135deg, var(--accent-5), var(--accent-1), var(--accent-2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+}
+.slide-subtitle {
+  font-size: clamp(1rem, 2vw, 1.3rem);
+  color: var(--text-secondary);
+  font-weight: 400;
+  margin-bottom: 2.5em;
+  line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANIMATE-IN ITEMS
+   ═══════════════════════════════════════════════════════════════ */
+.anim-item {
+  opacity: 0; transform: translateY(24px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.slide.active .anim-item { opacity: 1; transform: translateY(0); }
+.slide.active .anim-item:nth-child(1) { transition-delay: 0.1s; }
+.slide.active .anim-item:nth-child(2) { transition-delay: 0.2s; }
+.slide.active .anim-item:nth-child(3) { transition-delay: 0.3s; }
+.slide.active .anim-item:nth-child(4) { transition-delay: 0.4s; }
+.slide.active .anim-item:nth-child(5) { transition-delay: 0.5s; }
+.slide.active .anim-item:nth-child(6) { transition-delay: 0.55s; }
+.slide.active .anim-item:nth-child(7) { transition-delay: 0.6s; }
+.slide.active .anim-item:nth-child(8) { transition-delay: 0.65s; }
+.slide.active .anim-item:nth-child(9) { transition-delay: 0.7s; }
+.slide.active .anim-item:nth-child(10) { transition-delay: 0.75s; }
+.slide.active .anim-item:nth-child(11) { transition-delay: 0.8s; }
+.slide.active .anim-item:nth-child(12) { transition-delay: 0.85s; }
+
+/* ═══════════════════════════════════════════════════════════════
+   CARDS & GLASS
+   ═══════════════════════════════════════════════════════════════ */
+.glass-card {
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius);
+  padding: 28px;
+  transition: all 0.3s ease;
+}
+.glass-card:hover {
+  border-color: var(--accent-1);
+  box-shadow: 0 0 30px rgba(6,182,212,0.1);
+  transform: translateY(-3px);
+}
+
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+.card-icon {
+  font-size: 2rem; margin-bottom: 12px; display: block;
+}
+.card-title {
+  font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; color: var(--accent-5);
+}
+.card-text {
+  font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CODE BLOCKS
+   ═══════════════════════════════════════════════════════════════ */
+.code-block {
+  background: rgba(2, 6, 23, 0.8);
+  border: 1px solid rgba(56, 189, 248, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 20px 24px;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: var(--accent-5);
+  overflow-x: auto;
+  white-space: pre;
+}
+.code-block .comment { color: var(--text-muted); }
+.code-block .keyword { color: var(--purple); }
+.code-block .string { color: var(--green); }
+.code-block .folder { color: var(--accent-3); }
+.code-block .file { color: var(--text-secondary); }
+
+/* ═══════════════════════════════════════════════════════════════
+   TAGS / BADGES
+   ═══════════════════════════════════════════════════════════════ */
+.tag {
+  display: inline-block;
+  padding: 4px 12px; border-radius: 20px;
+  font-size: 0.78rem; font-weight: 600;
+  border: 1px solid;
+}
+.tag-get { color: var(--green); border-color: var(--green); background: rgba(52,211,153,0.1); }
+.tag-post { color: var(--blue); border-color: var(--blue); background: rgba(96,165,250,0.1); }
+.tag-put { color: var(--orange); border-color: var(--orange); background: rgba(251,191,36,0.1); }
+.tag-delete { color: var(--red); border-color: var(--red); background: rgba(248,113,113,0.1); }
+
+/* ═══════════════════════════════════════════════════════════════
+   ENDPOINT TABLE
+   ═══════════════════════════════════════════════════════════════ */
+.endpoint-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.endpoint-table th {
+  text-align: left; padding: 10px 14px;
+  color: var(--accent-3); border-bottom: 1px solid var(--border-glass);
+  font-weight: 600; font-size: 0.78rem;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.endpoint-table td {
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(56,189,248,0.05);
+  color: var(--text-secondary);
+}
+.endpoint-table .path { font-family: var(--font-mono); color: var(--text-primary); font-size: 0.82rem; }
+
+/* ═══════════════════════════════════════════════════════════════
+   METRIC CARDS
+   ═══════════════════════════════════════════════════════════════ */
+.metric-card {
+  text-align: center; padding: 24px 16px;
+}
+.metric-number {
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--accent-4), var(--accent-2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.1; margin-bottom: 6px;
+}
+.metric-label {
+  font-size: 0.82rem; color: var(--text-secondary); font-weight: 500;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ARCHITECTURE DIAGRAM
+   ═══════════════════════════════════════════════════════════════ */
+.arch-layer {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  margin-bottom: 8px;
+}
+.arch-box {
+  padding: 14px 22px;
+  border-radius: var(--radius-sm);
+  font-weight: 600; font-size: 0.9rem;
+  text-align: center; min-width: 140px;
+  border: 1px solid;
+}
+.arch-arrow {
+  color: var(--text-muted); font-size: 1.4rem;
+  animation: arrowPulse 2s infinite;
+}
+.arch-arrow-down {
+  display: flex; justify-content: center;
+  color: var(--text-muted); font-size: 1.4rem; margin: 4px 0;
+  animation: arrowPulse 2s infinite;
+}
+@keyframes arrowPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SHIELD VISUAL
+   ═══════════════════════════════════════════════════════════════ */
+.shield-layers {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.shield-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, rgba(6,182,212,0.08), transparent);
+  border-left: 3px solid var(--accent-1);
+  font-size: 0.88rem; color: var(--text-secondary);
+}
+.shield-row .shield-icon { font-size: 1.1rem; min-width: 24px; text-align: center; }
+.shield-row strong { color: var(--text-primary); }
+
+/* ═══════════════════════════════════════════════════════════════
+   TEST PYRAMID
+   ═══════════════════════════════════════════════════════════════ */
+.pyramid-wrapper { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.pyramid-level {
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px; border-radius: var(--radius-sm);
+  text-align: center; font-weight: 600;
+  border: 1px solid;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DOCKER FLOW
+   ═══════════════════════════════════════════════════════════════ */
+.docker-flow {
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+  flex-wrap: wrap;
+}
+.docker-stage {
+  padding: 20px 24px; border-radius: var(--radius);
+  text-align: center; min-width: 160px;
+  border: 1px solid;
+}
+.docker-stage .stage-num {
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 6px; opacity: 0.7;
+}
+.docker-stage .stage-name {
+  font-weight: 700; font-size: 1rem; margin-bottom: 4px;
+}
+.docker-stage .stage-detail {
+  font-size: 0.78rem; opacity: 0.7;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RULES GRID
+   ═══════════════════════════════════════════════════════════════ */
+.rule-card {
+  padding: 16px 20px;
+}
+.rule-id {
+  font-family: var(--font-mono);
+  font-size: 0.72rem; font-weight: 700;
+  color: var(--accent-1);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+.rule-name {
+  font-weight: 700; font-size: 0.92rem;
+  color: var(--text-primary); margin-bottom: 6px;
+}
+.rule-desc {
+  font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   COVER SLIDE
+   ═══════════════════════════════════════════════════════════════ */
+#slide-cover {
+  background: radial-gradient(ellipse at 50% 120%, rgba(6,182,212,0.15) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 20%, rgba(14,165,233,0.1) 0%, transparent 40%),
+              var(--bg-primary);
+}
+.cover-title {
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  font-weight: 900;
+  background: linear-gradient(135deg, #67e8f9, #06b6d4, #0ea5e9, #38bdf8);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.03em; line-height: 1.1;
+  margin-bottom: 16px;
+  text-shadow: none;
+}
+.cover-subtitle {
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
+  color: var(--text-secondary);
+  font-weight: 300; max-width: 600px;
+  margin-bottom: 40px; line-height: 1.5;
+}
+.cover-meta {
+  font-size: 0.9rem; color: var(--text-muted);
+  font-weight: 500;
+  padding: 8px 24px;
+  border-radius: 30px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-glass);
+}
+
+/* WAVES */
+.waves-container {
+  position: absolute; bottom: 0; left: 0; width: 100%; height: 120px;
+  overflow: hidden; z-index: 0;
+}
+.wave {
+  position: absolute; bottom: 0; left: -10%;
+  width: 120%; height: 100%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 120'%3E%3Cpath fill='%2306b6d4' fill-opacity='0.08' d='M0,64L48,58.7C96,53,192,43,288,48C384,53,480,75,576,80C672,85,768,75,864,64C960,53,1056,43,1152,48C1248,53,1344,75,1392,85.3L1440,96L1440,120L0,120Z'/%3E%3C/svg%3E") repeat-x;
+  background-size: 1440px 120px;
+  animation: waveMove 8s linear infinite;
+}
+.wave:nth-child(2) {
+  bottom: -5px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 120'%3E%3Cpath fill='%230ea5e9' fill-opacity='0.05' d='M0,96L48,90.7C96,85,192,75,288,69.3C384,64,480,64,576,69.3C672,75,768,85,864,80C960,75,1056,53,1152,48C1248,43,1344,53,1392,58.7L1440,64L1440,120L0,120Z'/%3E%3C/svg%3E") repeat-x;
+  background-size: 1440px 120px;
+  animation: waveMove 12s linear infinite reverse;
+}
+.wave:nth-child(3) {
+  bottom: -10px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 120'%3E%3Cpath fill='%2338bdf8' fill-opacity='0.04' d='M0,32L48,42.7C96,53,192,75,288,80C384,85,480,75,576,64C672,53,768,43,864,48C960,53,1056,75,1152,80C1248,85,1344,75,1392,69.3L1440,64L1440,120L0,120Z'/%3E%3C/svg%3E") repeat-x;
+  background-size: 1440px 120px;
+  animation: waveMove 15s linear infinite;
+}
+@keyframes waveMove {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* FLOATING PARTICLES */
+.particles {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+}
+.particle {
+  position: absolute;
+  width: 4px; height: 4px;
+  background: var(--accent-1);
+  border-radius: 50%;
+  opacity: 0;
+  animation: float-particle linear infinite;
+}
+@keyframes float-particle {
+  0% { opacity: 0; transform: translateY(100vh) scale(0); }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
+  100% { opacity: 0; transform: translateY(-10vh) scale(1); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CONCLUSION SLIDE
+   ═══════════════════════════════════════════════════════════════ */
+#slide-conclusion {
+  background: radial-gradient(ellipse at 50% 50%, rgba(6,182,212,0.1) 0%, transparent 60%),
+              var(--bg-primary);
+}
+.conclusion-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  margin-bottom: 14px;
+}
+.conclusion-check {
+  color: var(--green); font-size: 1.2rem; flex-shrink: 0; margin-top: 2px;
+}
+.conclusion-text {
+  font-size: 1rem; color: var(--text-secondary); line-height: 1.5;
+}
+.questions-badge {
+  display: inline-block;
+  margin-top: 32px; padding: 12px 36px;
+  border-radius: 30px; font-size: 1.2rem; font-weight: 700;
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  color: var(--bg-primary);
+  animation: glowPulse 3s infinite;
+}
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 20px var(--accent-glow); }
+  50% { box-shadow: 0 0 40px var(--accent-glow), 0 0 60px rgba(6,182,212,0.1); }
+}
+.footer-text {
+  margin-top: 24px; font-size: 0.8rem; color: var(--text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PAIN POINT ITEMS
+   ═══════════════════════════════════════════════════════════════ */
+.pain-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+.pain-card {
+  padding: 24px;
+  border-left: 3px solid var(--red);
+}
+.pain-card .pain-icon { font-size: 1.8rem; margin-bottom: 10px; }
+.pain-card .pain-title { font-weight: 700; color: var(--red); font-size: 0.95rem; margin-bottom: 6px; }
+.pain-card .pain-desc { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; }
+
+/* ═══════════════════════════════════════════════════════════════
+   TECH GRID
+   ═══════════════════════════════════════════════════════════════ */
+.tech-category {
+  margin-bottom: 4px;
+}
+.tech-cat-label {
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--accent-1); font-weight: 700; margin-bottom: 8px;
+}
+.tech-items { display: flex; flex-wrap: wrap; gap: 8px; }
+.tech-pill {
+  padding: 6px 14px; border-radius: 8px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  font-size: 0.82rem; font-weight: 500;
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+}
+.tech-pill:hover {
+  border-color: var(--accent-1);
+  background: rgba(6,182,212,0.1);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FEATURE LIST
+   ═══════════════════════════════════════════════════════════════ */
+.feature-list { list-style: none; }
+.feature-list li {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 10px 0; font-size: 0.9rem; color: var(--text-secondary);
+  line-height: 1.5;
+}
+.feature-list li .feat-icon {
+  color: var(--accent-4); font-size: 1rem; flex-shrink: 0; margin-top: 2px;
+}
+.feature-list li strong { color: var(--text-primary); }
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .slide { padding: 50px 24px 80px; }
+  .grid-2, .grid-3, .grid-4, .pain-grid { grid-template-columns: 1fr; }
+  .docker-flow { flex-direction: column; }
+  .arch-layer { flex-direction: column; gap: 6px; }
+  .arch-arrow { transform: rotate(90deg); }
+  #prev-btn, #next-btn { display: none; }
+}
+@media (max-width: 600px) {
+  .slide { padding: 40px 16px 80px; }
+  .glass-card { padding: 18px; }
+  #nav-dots { padding: 6px 10px; }
+  .nav-dot { width: 8px; height: 8px; }
+  .nav-dot.active { width: 18px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SCROLLBAR
+   ═══════════════════════════════════════════════════════════════ */
+.slide::-webkit-scrollbar { width: 4px; }
+.slide::-webkit-scrollbar-track { background: transparent; }
+.slide::-webkit-scrollbar-thumb { background: var(--accent-1); border-radius: 4px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION DIVIDER LINE
+   ═══════════════════════════════════════════════════════════════ */
+.divider {
+  width: 60px; height: 3px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent-1), var(--accent-4));
+  margin-bottom: 2em;
+}
+</style>
+</head>
+<body>
+
+<!-- PROGRESS BAR -->
+<div id="progress-bar"></div>
+
+<!-- SLIDE COUNTER -->
+<div id="slide-counter">1 / 17</div>
+
+<!-- NAV ARROWS -->
+<button class="nav-arrow" id="prev-btn" aria-label="Slide anterior">‹</button>
+<button class="nav-arrow" id="next-btn" aria-label="Próximo slide">›</button>
+
+<!-- NAV DOTS -->
+<div id="nav-dots"></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PRESENTATION
+     ═══════════════════════════════════════════════════════════ -->
+<div id="presentation">
+
+  <!-- ========== SLIDE 1: COVER ========== -->
+  <div class="slide active" id="slide-cover">
+    <div class="particles" id="particles"></div>
+    <div style="text-align:center;z-index:1;position:relative;">
+      <div class="cover-title anim-item">🏊 AquaSchedule</div>
+      <div class="cover-subtitle anim-item">Sistema de Agendamento e Controle para Aulas de Natação</div>
+      <div class="cover-meta anim-item">Última Sprint — Ford Enter</div>
+    </div>
+    <div class="waves-container">
+      <div class="wave"></div>
+      <div class="wave"></div>
+      <div class="wave"></div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 2: O PROBLEMA ========== -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div class="slide-title anim-item">O Problema que Resolvemos</div>
+      <div class="divider anim-item"></div>
+      <div class="slide-subtitle anim-item">Academias e escolas de natação enfrentam desafios diários na gestão manual de aulas e agendamentos.</div>
+      <div class="pain-grid">
+        <div class="glass-card pain-card anim-item">
+          <div class="pain-icon">📋</div>
+          <div class="pain-title">Overbooking de Vagas</div>
+          <div class="pain-desc">Controle manual de vagas gera risco constante de lotação e insatisfação dos alunos.</div>
+        </div>
+        <div class="glass-card pain-card anim-item">
+          <div class="pain-icon">⏰</div>
+          <div class="pain-title">Conflitos de Horário</div>
+          <div class="pain-desc">Sem detecção automática, alunos e professores frequentemente enfrentam sobreposições de aulas.</div>
+        </div>
+        <div class="glass-card pain-card anim-item">
+          <div class="pain-icon">👥</div>
+          <div class="pain-title">Falta de Segregação</div>
+          <div class="pain-desc">Sem distinção clara entre perfis de professor e aluno, gerando confusão de permissões.</div>
+        </div>
+        <div class="glass-card pain-card anim-item">
+          <div class="pain-icon">📜</div>
+          <div class="pain-title">Sem Histórico</div>
+          <div class="pain-desc">Impossível rastrear agendamentos, cancelamentos e padrões de uso sem sistema digital.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 3: A SOLUÇÃO ========== -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div class="slide-title anim-item">AquaSchedule — A Solução</div>
+      <div class="divider anim-item"></div>
+      <div class="slide-subtitle anim-item">Uma API RESTful moderna e completa para digitalizar toda a gestão de aulas de natação, do agendamento ao controle de capacidade.</div>
+      <div class="grid-2">
+        <div class="glass-card anim-item">
+          <div class="card-icon">🔗</div>
+          <div class="card-title">API RESTful Completa</div>
+          <div class="card-text">Endpoints padronizados seguindo REST para gestão de turmas, reservas e autenticação de usuários.</div>
+        </div>
+        <div class="glass-card anim-item">
+          <div class="card-icon">📊</div>
+          <div class="card-title">Controle de Capacidade em Tempo Real</div>
+          <div class="card-text">Cálculo dinâmico de vagas disponíveis, impedindo overbooking automaticamente.</div>
+        </div>
+        <div class="glass-card anim-item">
+          <div class="card-icon">🔍</div>
+          <div class="card-title">Detecção de Conflitos de Horário</div>
+          <div class="card-text">Algoritmo de sobreposição temporal que garante agendamentos sem colisão.</div>
+        </div>
+        <div class="glass-card anim-item">
+          <div class="card-icon">🔐</div>
+          <div class="card-title">Autenticação JWT Segura</div>
+          <div class="card-text">Sistema robusto com tokens JWT, hash BCrypt e controle de acesso baseado em roles.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 4: TECNOLOGIAS ========== -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div class="slide-title anim-item">Stack Tecnológico</div>
+      <div class="divider anim-item"></div>
+      <div class="slide-subtitle anim-item">Tecnologias modernas e robustas para cada camada do sistema.</div>
+      <div class="grid-2" style="gap:20px;">
+        <div class="glass-card tech-category anim-item">
+          <div class="tech-cat-label">⚙️ Backend</div>
+          <div class="tech-items">
+            <span class="tech-pill">C# 12</span>
+            <span class="tech-pill">ASP.NET Core 8</span>
+            <span class="tech-pill">Entity Framework Core 8</span>
+          </div>
+        </div>
+        <div class="glass-card tech-category anim-item">
+          <div class="tech-cat-label">🗄️ Banco de Dados</div>
+          <div class="tech-items">
+            <span class="tech-pill">MySQL 8.0+</span>
+            <span class="tech-pill">Pomelo Provider</span>
+          </div>
+        </div>
+        <div class="glass-card tech-category anim-item">
+          <div class="tech-cat-label">🔒 Segurança</div>
+          <div class="tech-items">
+            <span class="tech-pill">JWT Bearer</span>
+            <span class="tech-pill">BCrypt.Net</span>
+          </div>
+        </div>
+        <div class="glass-card tech-category anim-item">
+          <div class="tech-cat-label">🖥️ Frontend</div>
+          <div class="tech-items">
+            <span class="tech-pill">HTML5</span>
+            <span class="tech-pill">CSS3</span>
+            <span class="tech-pill">JavaScript ES6+</span>
+            <span class="tech-pill">Bootstrap 5.3</span>
+          </div>
+        </div>
+        <div class="glass-card tech-category anim-item">
+          <div class="tech-cat-label">✅ Testes</div>
+          <div class="tech-items">
+            <span class="tech-pill">xUnit</span>
+            <span class="tech-pill">Moq</span>
+            <span class="tech-pill">Cypress</span>
+          </div>
+        </div>
+        <div class="glass-card tech-category anim-item">
+          <div class="tech-cat-label">🐳 DevOps & Outros</div>
+          <div class="tech-items">
+            <span class="tech-pill">Docker</span>
+            <span class="tech-pill">Mapster</span>
+            <span class="tech-pill">Swagger</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 5: ARQUITETURA ========== -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div class="slide-title anim-item">Arquitetura de Camadas</div>
+      <div class="divider anim-item"></div>
+      <div class="slide-subtitle anim-item">Separação clara de responsabilidades seguindo princípios SOLID, padrão Repository e Injeção de Dependência.</div>
+
+      <div style="display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap;justify-content:center;">
+        <!-- Main flow -->
+        <div class="anim-item" style="flex:1;min-width:300px;">
+          <div class="arch-layer">
+            <div class="arch-box" style="background:rgba(96,165,250,0.12);border-color:var(--blue);color:var(--blue);width:100%;">
+              🎯 Controllers <span style="font-size:0.75rem;opacity:0.7;display:block;">Endpoints HTTP — Recebem requests</span>
+            </div>
+          </div>
+          <div class="arch-arrow-down">▼</div>
+          <div class="arch-layer">
+            <div class="arch-box" style="background:rgba(52,211,153,0.12);border-color:var(--green);color:var(--green);width:100%;">
+              ⚙️ Services <span style="font-size:0.75rem;opacity:0.7;display:block;">Regras de negócio e validações</span>
+            </div>
+          </div>
+          <div class="arch-arrow-down">▼</div>
+          <div class="arch-layer">
+            <div class="arch-box" style="background:rgba(251,191,36,0.12);border-color:var(--orange);color:var(--orange);width:100%;">
+              📦 Repositories <span style="font-size:0.75rem;opacity:0.7;display:block;">Acesso a dados via abstrações</span>
+            </div>
+          </div>
+          <div class="arch-arrow-down">▼</div>
+          <div class="arch-layer">
+            <div class="arch-box" style="background:rgba(167,139,250,0.12);border-color:var(--purple);color:var(--purple);width:100%;">
+              🗃️ DbContext <span style="font-size:0.75rem;opacity:0.7;display:block;">Entity Framework Core ORM</span>
+            </div>
+          </div>
+          <div class="arch-arrow-down">▼</div>
+          <div class="arch-layer">
+            <div class="arch-box" style="background:rgba(6,182,212,0.12);border-color:var(--accent-1);color:var(--accent-1);width:100%;">
+              🐬 MySQL <span style="font-size:0.75rem;opacity:0.7;display:block;">Banco de dados relacional</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cross-cutting -->
+        <div class="anim-item" style="display:flex;flex-direction:column;gap:12px;min-width:200px;">
+          <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);font-weight:600;margin-bottom:4px;">Cross-cutting</div>
+          <div class="glass-card" style="padding:14px 18px;border-left:3px solid var(--pink);">
+            <div style="font-weight:600;font-size:0.88rem;color:var(--pink);">📤 DTOs</div>
+            <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:4px;">Request &amp; Response models</div>
+          </div>
+          <div class="glass-card" style="padding:14px 18px;border-left:3px solid var(--purple);">
+            <div style="font-weight:600;font-size:0.88rem;color:var(--purple);">🏗️ Models</div>
+            <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:4px;">Entidades de domínio</div>
+          </div>
+          <div class="glass-card" style="padding:14px 18px;border-left:3px solid var(--green);">
+            <div style="font-weight:600;font-size:0.88rem;color:var(--green);">🗺️ Mapster</div>
+            <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:4px;">Mapeamento DTO ↔ Model</div>
+          </div>
+          <div class="glass-card" style="padding:14px 18px;border-left:3px solid var(--orange);">
+            <div style="font-weight:600;font-size:0.88rem;color:var(--orange);">🛡️ Middleware</div>
+            <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:4px;">Exception handler global</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 6: AUTENTICAÇÃO ========== -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div class="slide-title anim-item">🔐 Autenticação e Segurança</div>
+      <div class="divider anim-item"></div>
+      <div class="slide-subtitle anim-item">Sistema de autenticação robusto com múltiplas camadas de proteção.</div>
+      <div class="grid-2">
+        <div style="display:flex;flex-direction:column;gap:0;">
+          <ul class="feature-list">
+            <li class="anim-item"><span class="feat-icon">✦</span><span>Registro com validação de <strong>e-mail único</strong> (RF005)</span></li>
+            <li class="anim-item"><span class="feat-icon">✦</span><span>Login JWT com claims: <strong>Id, Email, Nome, Role</strong> — 8h de expiração</span></li>
+            <li class="anim-item"><span class="feat-icon">✦</span><span>Hash <strong>BCrypt</strong> com work factor 12</span></li>
+            <li class="anim-item"><span class="feat-icon">✦</span><span>3 roles: <strong>Admin</strong>, <strong>Professor</strong>, <strong>Aluno</strong></span></li>
+            <li class="anim-item"><span class="feat-icon">✦</span><span><strong>Account Lockout</strong>: 5 tentativas → 15 min de bloqueio</span></li>
+            <li class="anim-item"><span class="feat-icon">✦</span><span><strong>Rate Limiting</strong>: 5 req/min nos endpoints de auth</span></li>
+            <li class="anim-item"><span class="feat-icon">✦</span><span>Reset de senha via <strong>token com expiração</strong> de 30 min</span></li>
+          </ul>
+        </div>
+        <div class="anim-item">
+          <div class="code-block" style="font-size:0.78rem;"><span class="comment">// JWT Token Payload</span>
+{
+  <span class="string">"sub"</span>: <span class="string">"42"</span>,
+  <span class="string">"email"</span>: <span class="string">"aluno@email.com"</span>,
+  <span class="string">"name"</span>: <span class="string">"João Silva"</span>,
+  <span class="string">"role"</span>: <span class="string">"Aluno"</span>,
+  <span class="string">"exp"</span>: 1717027200
+}
+
+<span class="comment">// Roles Hierárquicos</span>
+<span class="keyword">Admin</span> > <span class="keyword">Professor</span> > <span class="keyword">Aluno</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 7: TURMAS ========== -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div class="slide-title anim-item">📚 Gestão de Turmas</div>
+      <div class="divider anim-item"></div>
+      <div class="slide-subtitle anim-item">CRUD completo com validações de negócio e controle de capacidade dinâmico.</div>
+      <div class="grid-2">
+        <div>
+          <ul class="feature-list">
+            <li class="anim-item"><span class="feat-icon">✦</span><span><strong>CRUD completo</strong> restrito a Professor e Admin</span></li>
+            <li class="anim-item"><span class="feat-icon">✦</span><span>Capacidade máxima: <strong>1–50 alunos</strong> (RF010)</span></li>
+            <li class="anim-item"><span class="feat-icon">✦</span><span>Cálculo dinâmico: <strong>Vagas = Máximo − Ativas</strong></span></li>
+            <li class="anim-item"><span class="feat-icon">✦</span><span>Matriz de aptidão: <strong>6 modalidades</strong></span></li>
+            <li class="anim-item"><span class="feat-icon">✦</span><span>Certificações: <strong>CREF, Salvamento, Primeiros Socorros</strong></span></li>
+            <li class="anim-item"><span class="feat-icon">✦</span><span>Lista de <strong>alunos inscritos</strong> por turma</span></li>
+          </ul>
+        </div>
+        <div class="anim-item">
+          <div class="glass-card" style="text-align:center;">
+            <div style="font-size:3rem;margin-bottom:8px;">🏊‍♂️</div>
+            <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:12px;">6 MODALIDADES</div>
+            <div class="tech-items" style="justify-content:center;">
+              <span class="tech-pill">Crawl</span>
+              <span class="tech-pill">Costas</span>
+              <span class="tech-pill">Peito</span>
+              <span class="tech-pill">Borboleta</span>
+              <span class="tech-pill">Medley</span>
+              <span class="tech-pill">Hidro</span>
+            </div>
+            <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border-glass);">
+              <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:8px;">FÓRMULA DE VAGAS</div>
+              <div style="font-family:var(--font-mono);font-size:1.1rem;color:var(--accent-4);">
+                Disponíveis = Max − Ativas
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 8: RESERVAS ========== -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div class="slide-title anim-item">📅 Agendamento de Reservas</div>
+      <div class="divider anim-item"></div>
+      <div class="slide-subtitle anim-item">Criação de reservas com validação automática de múltiplas regras de negócio.</div>
+      <div class="grid-2">
+        <div>
+          <div class="glass-card anim-item" style="margin-bottom:16px;border-left:3px solid var(--accent-1);">
+            <div class="card-title">Validações Automáticas</div>
+            <ul class="feature-list" style="margin-top:8px;">
+              <li><span class="feat-icon">🛑</span><span><strong>RF001</strong> — Controle de capacidade máxima</span></li>
+              <li><span class="feat-icon">⏱️</span><span><strong>RF002</strong> — Conflito de horário (sobreposição)</span></li>
+              <li><span class="feat-icon">🚫</span><span><strong>RF008</strong> — Reserva duplicada na mesma turma</span></li>
+            </ul>
+          </div>
+          <div class="glass-card anim-item" style="border-left:3px solid var(--orange);">
+            <div class="card-title" style="color:var(--orange);">Cancelamento</div>
+            <div class="card-text"><strong>RF009</strong> — Soft Delete preservando histórico. O registro não é removido, apenas marcado como cancelado.</div>
+          </div>
+        </div>
+        <div class="anim-item">
+          <div class="glass-card" style="border-left:3px solid var(--green);">
+            <div class="card-title" style="color:var(--green);">Segregação por Perfil</div>
+            <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span class="tag tag-get" style="min-width:80px;text-align:center;">Aluno</span>
+                <span style="font-size:0.82rem;color:var(--text-secondary);">Vê apenas suas reservas</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span class="tag tag-put" style="min-width:80px;text-align:center;">Professor</span>
+                <span style="font-size:0.82rem;color:var(--text-secondary);">Vê reservas das suas turmas</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span class="tag tag-post" style="min-width:80px;text-align:center;">Admin</span>
+                <span style="font-size:0.82rem;color:var(--text-secondary);">Acesso total a todas as reservas</span>
+              </div>
+            </div>
+          </div>
+          <div class="glass-card anim-item" style="margin-top:16px;">
+            <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:8px;">ALGORITMO DE SOBREPOSIÇÃO</div>
+            <div class="code-block" style="font-size:0.8rem;padding:14px;"><span class="keyword">InicioA</span> < <span class="string">FimB</span> && <span class="keyword">InicioB</span> < <span class="string">FimA</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 9: REGRAS DE NEGÓCIO ========== -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div class="slide-title anim-item">⚙️ Regras de Negócio</div>
+      <div class="divider anim-item"></div>
+      <div class="slide-subtitle anim-item">13 regras documentadas garantem a integridade e consistência do sistema.</div>
+      <div class="grid-3" style="gap:14px;">
+        <div class="glass-card rule-card anim-item">
+          <div class="rule-id">RF001</div>
+          <div class="rule-name">Controle de Capacidade</div>
+          <div class="rule-desc">Retorna HTTP 400 se exceder o máximo de alunos da turma.</div>
+        </div>
+        <div class="glass-card rule-card anim-item">
+          <div class="rule-id">RF002</div>
+          <div class="rule-name">Conflito de Horário</div>
+          <div class="rule-desc">InicioA &lt; FimB &amp;&amp; InicioB &lt; FimA — impede sobreposição temporal.</div>
+        </div>
+        <div class="glass-card rule-card anim-item">
+          <div class="rule-id">RF004</div>
+          <div class="rule-name">Segregação de Perfis</div>
+          <div class="rule-desc">Cada role acessa somente os dados pertinentes ao seu perfil.</div>
+        </div>
+        <div class="glass-card rule-card anim-item">
+          <div class="rule-id">RF005</div>
+          <div class="rule-name">Unicidade de E-mail</div>
+          <div class="rule-desc">Dupla camada: validação na API + constraint UNIQUE no banco.</div>
+        </div>
+        <div class="glass-card rule-card anim-item">
+          <div class="rule-id">RF009</div>
+          <div class="rule-name">Soft Delete</div>
+          <div class="rule-desc">Cancelamentos preservam histórico via flag, sem remoção física.</div>
+        </div>
+        <div class="glass-card rule-card anim-item">
+          <div class="rule-id">RF011</div>
+          <div class="rule-name">Identidade via Token</div>
+          <div class="rule-desc">ID do usuário extraído do JWT — nunca via body do request.</div>
+        </div>
+        <div class="glass-card rule-card anim-item" style="grid-column: span 3;">
+          <div class="rule-id">RF012</div>
+          <div class="rule-name">Integridade Referencial</div>
+          <div class="rule-desc">Restrict para proteger entidades referenciadas e Cascade para exclusões em cadeia quando apropriado.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 10: SEGURANÇA ========== -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div class="slide-title anim-item">🛡️ Camadas de Segurança</div>
+      <div class="divider anim-item"></div>
+      <div class="slide-subtitle anim-item">Múltiplas camadas de proteção para um sistema robusto em produção.</div>
+      <div class="shield-layers">
+        <div class="shield-row anim-item"><span class="shield-icon">🔑</span><span><strong>JWT HMAC-SHA256</strong> com zero clock skew para validação precisa de tokens</span></div>
+        <div class="shield-row anim-item"><span class="shield-icon">🔒</span><span><strong>BCrypt</strong> (work factor 12) para hash seguro de senhas</span></div>
+        <div class="shield-row anim-item"><span class="shield-icon">👑</span><span><strong>RBAC</strong> hierárquico: Admin &gt; Professor &gt; Aluno</span></div>
+        <div class="shield-row anim-item"><span class="shield-icon">🚪</span><span><strong>Account Lockout</strong>: 5 falhas consecutivas → 15 min de bloqueio</span></div>
+        <div class="shield-row anim-item"><span class="shield-icon">⏱️</span><span><strong>Rate Limiting</strong> (fixed-window) para prevenção de brute force</span></div>
+        <div class="shield-row anim-item"><span class="shield-icon">🌐</span><span><strong>CORS restritivo</strong> — apenas origens autorizadas</span></div>
+        <div class="shield-row anim-item"><span class="shield-icon">📦</span><span><strong>Limite de 10 MB</strong> por request (anti-DoS)</span></div>
+        <div class="shield-row anim-item"><span class="shield-icon">🚫</span><span><strong>Tratamento de erros</strong> sem vazamento de stack trace</span></div>
+        <div class="shield-row anim-item"><span class="shield-icon">🔐</span><span><strong>HTTPS obrigatório</strong> em ambiente de produção</span></div>
+        <div class="shield-row anim-item"><span class="shield-icon">🩹</span><span><strong>CVE-2026-32933</strong> mitigada — Mapster substitui AutoMapper vulnerável</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 11: ENDPOINTS ========== -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div class="slide-title anim-item">🔗 Endpoints da API</div>
+      <div class="divider anim-item"></div>
+      <div class="slide-subtitle anim-item">Interface RESTful organizada em 3 grupos com controle de acesso por role.</div>
+      <div class="grid-3" style="gap:20px;">
+        <div class="glass-card anim-item">
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--accent-1);font-weight:700;margin-bottom:14px;">🔐 Autenticação</div>
+          <table class="endpoint-table">
+            <tr><td><span class="tag tag-post">POST</span></td><td class="path">/api/auth/register</td></tr>
+            <tr><td><span class="tag tag-post">POST</span></td><td class="path">/api/auth/login</td></tr>
+          </table>
+        </div>
+        <div class="glass-card anim-item">
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--accent-1);font-weight:700;margin-bottom:14px;">📚 Turmas</div>
+          <table class="endpoint-table">
+            <tr><td><span class="tag tag-get">GET</span></td><td class="path">/api/turmas</td></tr>
+            <tr><td><span class="tag tag-get">GET</span></td><td class="path">/api/turmas/:id</td></tr>
+            <tr><td><span class="tag tag-post">POST</span></td><td class="path">/api/turmas</td></tr>
+            <tr><td><span class="tag tag-put">PUT</span></td><td class="path">/api/turmas/:id</td></tr>
+            <tr><td><span class="tag tag-delete">DEL</span></td><td class="path">/api/turmas/:id</td></tr>
+          </table>
+        </div>
+        <div class="glass-card anim-item">
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--accent-1);font-weight:700;margin-bottom:14px;">📅 Reservas</div>
+          <table class="endpoint-table">
+            <tr><td><span class="tag tag-get">GET</span></td><td class="path">/api/reservas</td></tr>
+            <tr><td><span class="tag tag-get">GET</span></td><td class="path">/api/reservas/:id</td></tr>
+            <tr><td><span class="tag tag-post">POST</span></td><td class="path">/api/reservas</td></tr>
+            <tr><td><span class="tag tag-delete">DEL</span></td><td class="path">/api/reservas/:id</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 12: FRONTEND ========== -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div class="slide-title anim-item">🖥️ Frontend Integrado</div>
+      <div class="divider anim-item"></div>
+      <div class="slide-subtitle anim-item">SPA leve e responsiva servida como arquivos estáticos via wwwroot.</div>
+      <div class="grid-2">
+        <div>
+          <ul class="feature-list">
+            <li class="anim-item"><span class="feat-icon">🔑</span><span><strong>Login Page</strong> + Dashboard SPA integrada</span></li>
+            <li class="anim-item"><span class="feat-icon">🌙</span><span>Tema <strong>dark</strong> com Bootstrap 5.3</span></li>
+            <li class="anim-item"><span class="feat-icon">📅</span><span><strong>FullCalendar</strong> para visualização de turmas</span></li>
+            <li class="anim-item"><span class="feat-icon">🪟</span><span><strong>Modais Bootstrap</strong> para operações CRUD</span></li>
+            <li class="anim-item"><span class="feat-icon">📦</span><span><strong>8 módulos JS</strong> modulares e organizados</span></li>
+            <li class="anim-item"><span class="feat-icon">📁</span><span>Servido via <strong>wwwroot</strong> (arquivos estáticos)</span></li>
+          </ul>
+        </div>
+        <div class="anim-item">
+          <div class="glass-card" style="padding:0;overflow:hidden;">
+            <div style="background:rgba(6,182,212,0.08);padding:10px 18px;border-bottom:1px solid var(--border-glass);">
+              <div style="display:flex;gap:6px;">
+                <span style="width:10px;height:10px;border-radius:50%;background:#f87171;"></span>
+                <span style="width:10px;height:10px;border-radius:50%;background:#fbbf24;"></span>
+                <span style="width:10px;height:10px;border-radius:50%;background:#34d399;"></span>
+              </div>
+            </div>
+            <div style="padding:20px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+                <span style="font-size:1.4rem;">🏊</span>
+                <span style="font-weight:700;color:var(--accent-4);">AquaSchedule</span>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div style="background:rgba(6,182,212,0.1);border-radius:8px;padding:12px;text-align:center;">
+                  <div style="font-size:1.4rem;">📚</div>
+                  <div style="font-size:0.72rem;color:var(--text-secondary);margin-top:4px;">Turmas</div>
+                </div>
+                <div style="background:rgba(52,211,153,0.1);border-radius:8px;padding:12px;text-align:center;">
+                  <div style="font-size:1.4rem;">📅</div>
+                  <div style="font-size:0.72rem;color:var(--text-secondary);margin-top:4px;">Reservas</div>
+                </div>
+                <div style="background:rgba(167,139,250,0.1);border-radius:8px;padding:12px;text-align:center;">
+                  <div style="font-size:1.4rem;">👤</div>
+                  <div style="font-size:0.72rem;color:var(--text-secondary);margin-top:4px;">Perfil</div>
+                </div>
+                <div style="background:rgba(251,191,36,0.1);border-radius:8px;padding:12px;text-align:center;">
+                  <div style="font-size:1.4rem;">📊</div>
+                  <div style="font-size:0.72rem;color:var(--text-secondary);margin-top:4px;">Dashboard</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 13: TESTES ========== -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div class="slide-title anim-item">✅ Estratégia de Testes</div>
+      <div class="divider anim-item"></div>
+      <div class="slide-subtitle anim-item">Pirâmide de testes com cobertura unitária e end-to-end.</div>
+      <div class="grid-2" style="gap:30px;align-items:start;">
+        <div>
+          <!-- Pyramid -->
+          <div class="pyramid-wrapper anim-item">
+            <div class="pyramid-level" style="width:60%;background:rgba(52,211,153,0.1);border-color:var(--green);color:var(--green);">
+              <div>
+                <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;opacity:0.7;">E2E — Cypress</div>
+                <div style="font-size:1.8rem;font-weight:900;">41</div>
+                <div style="font-size:0.75rem;">testes</div>
+              </div>
+            </div>
+            <div class="pyramid-level" style="width:85%;background:rgba(96,165,250,0.1);border-color:var(--blue);color:var(--blue);">
+              <div>
+                <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;opacity:0.7;">Unitários — xUnit + Moq</div>
+                <div style="font-size:1.8rem;font-weight:900;">17</div>
+                <div style="font-size:0.75rem;">testes</div>
+              </div>
+            </div>
+            <div class="pyramid-level" style="width:100%;background:rgba(167,139,250,0.12);border-color:var(--purple);color:var(--purple);">
+              <div>
+                <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;opacity:0.7;">Total</div>
+                <div style="font-size:2rem;font-weight:900;">~58</div>
+                <div style="font-size:0.75rem;">casos de teste</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="glass-card anim-item" style="margin-bottom:14px;">
+            <div class="card-title" style="color:var(--blue);">🧪 Unitários (xUnit + Moq)</div>
+            <ul class="feature-list" style="margin-top:8px;">
+              <li><span class="feat-icon">•</span><span><strong>ReservaServiceTests</strong>: 8 testes (RF001, RF002, cancelamento)</span></li>
+              <li><span class="feat-icon">•</span><span><strong>TurmaServiceTests</strong>: 9 testes (CRUD, vagas, autorização)</span></li>
+            </ul>
+          </div>
+          <div class="glass-card anim-item" style="margin-bottom:14px;">
+            <div class="card-title" style="color:var(--green);">🌐 E2E (Cypress)</div>
+            <ul class="feature-list" style="margin-top:8px;">
+              <li><span class="feat-icon">•</span><span><strong>8 specs</strong>: auth, RBAC, regras de negócio, segurança, perfil, nível pedagógico</span></li>
+            </ul>
+          </div>
+          <div class="anim-item" style="display:flex;flex-direction:column;gap:8px;">
+            <div class="code-block" style="font-size:0.8rem;padding:12px 16px;">$ <span class="keyword">dotnet</span> test</div>
+            <div class="code-block" style="font-size:0.8rem;padding:12px 16px;">$ <span class="keyword">npx</span> cypress run</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 14: DOCKER ========== -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div class="slide-title anim-item">🐳 Containerização</div>
+      <div class="divider anim-item"></div>
+      <div class="slide-subtitle anim-item">Multi-stage Dockerfile para imagem otimizada e pronta para produção.</div>
+
+      <div class="docker-flow anim-item" style="margin-bottom:30px;">
+        <div class="docker-stage" style="background:rgba(96,165,250,0.1);border-color:var(--blue);color:var(--blue);">
+          <div class="stage-num">Stage 1</div>
+          <div class="stage-name">Build</div>
+          <div class="stage-detail">SDK 10.0</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="docker-stage" style="background:rgba(251,191,36,0.1);border-color:var(--orange);color:var(--orange);">
+          <div class="stage-num">Stage 2</div>
+          <div class="stage-name">Publish</div>
+          <div class="stage-detail">Otimização</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="docker-stage" style="background:rgba(52,211,153,0.1);border-color:var(--green);color:var(--green);">
+          <div class="stage-num">Stage 3</div>
+          <div class="stage-name">Runtime</div>
+          <div class="stage-detail">aspnet:10.0</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="gap:20px;">
+        <div class="glass-card anim-item">
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:1.2rem;">🔌</span>
+              <span style="color:var(--text-secondary);font-size:0.9rem;">Porta exposta: <strong style="color:var(--accent-4);">8080</strong></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:1.2rem;">💚</span>
+              <span style="color:var(--text-secondary);font-size:0.9rem;">Health check: <strong style="color:var(--accent-4);">/health</strong></span>
+            </div>
+          </div>
+        </div>
+        <div class="anim-item" style="display:flex;flex-direction:column;gap:8px;">
+          <div class="code-block" style="font-size:0.8rem;padding:12px 16px;">$ <span class="keyword">docker</span> build -t <span class="string">aquaschedule</span> .</div>
+          <div class="code-block" style="font-size:0.8rem;padding:12px 16px;">$ <span class="keyword">docker</span> run -p <span class="string">8080:8080</span> aquaschedule</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 15: ESTRUTURA ========== -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div class="slide-title anim-item">📁 Estrutura do Projeto</div>
+      <div class="divider anim-item"></div>
+      <div class="slide-subtitle anim-item">Organização limpa e modular seguindo convenções .NET.</div>
+      <div class="anim-item">
+        <div class="code-block" style="font-size:0.82rem;line-height:1.8;">
+<span class="folder">Ultima-Sprint-Ford-Enter-API/</span>
+├── <span class="folder">NatacaoAPI/</span>
+│   ├── <span class="folder">Controllers/</span>     <span class="comment">── endpoints HTTP</span>
+│   ├── <span class="folder">Services/</span>        <span class="comment">── regras de negócio</span>
+│   ├── <span class="folder">Repositories/</span>    <span class="comment">── acesso a dados</span>
+│   ├── <span class="folder">Models/</span>          <span class="comment">── entidades de domínio</span>
+│   ├── <span class="folder">DTOs/</span>            <span class="comment">── request/response</span>
+│   ├── <span class="folder">Data/</span>            <span class="comment">── DbContext (EF Core)</span>
+│   ├── <span class="folder">Middleware/</span>      <span class="comment">── exception handler</span>
+│   ├── <span class="folder">Profiles/</span>        <span class="comment">── Mapster config</span>
+│   ├── <span class="folder">wwwroot/</span>         <span class="comment">── frontend (SPA)</span>
+│   └── <span class="file">Program.cs</span>       <span class="comment">── configuração DI</span>
+├── <span class="folder">NatacaoAPI.Tests/</span>    <span class="comment">── 17 unit tests</span>
+├── <span class="folder">cypress/</span>             <span class="comment">── 41 E2E tests</span>
+└── <span class="file">Dockerfile</span>           <span class="comment">── multi-stage build</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 16: MÉTRICAS ========== -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div class="slide-title anim-item">📊 Métricas do Projeto</div>
+      <div class="divider anim-item"></div>
+      <div class="slide-subtitle anim-item">Números que demonstram a robustez e completude do AquaSchedule.</div>
+      <div class="grid-4" style="gap:16px;">
+        <div class="glass-card metric-card anim-item">
+          <div class="metric-number">3.000+</div>
+          <div class="metric-label">Linhas de Código<br>(Backend)</div>
+        </div>
+        <div class="glass-card metric-card anim-item">
+          <div class="metric-number">80K+</div>
+          <div class="metric-label">Bytes de Frontend<br>(CSS+HTML+JS)</div>
+        </div>
+        <div class="glass-card metric-card anim-item">
+          <div class="metric-number">13</div>
+          <div class="metric-label">Regras de Negócio<br>Documentadas</div>
+        </div>
+        <div class="glass-card metric-card anim-item">
+          <div class="metric-number">58</div>
+          <div class="metric-label">Casos de Teste<br>Automatizados</div>
+        </div>
+      </div>
+      <div class="grid-3" style="gap:16px;margin-top:16px;">
+        <div class="glass-card metric-card anim-item">
+          <div class="metric-number">10+</div>
+          <div class="metric-label">Camadas de<br>Segurança</div>
+        </div>
+        <div class="glass-card metric-card anim-item">
+          <div class="metric-number">3</div>
+          <div class="metric-label">Perfis de Usuário<br>Admin · Professor · Aluno</div>
+        </div>
+        <div class="glass-card metric-card anim-item">
+          <div class="metric-number">100%</div>
+          <div class="metric-label">Endpoints Documentados<br>via Swagger</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 17: CONCLUSÃO ========== -->
+  <div class="slide" id="slide-conclusion">
+    <div class="slide-inner" style="text-align:center;">
+      <div class="slide-title anim-item" style="font-size:clamp(2.2rem,5vw,3.5rem);">Obrigado! 🎓</div>
+      <div class="divider anim-item" style="margin-left:auto;margin-right:auto;"></div>
+      <div style="text-align:left;max-width:600px;margin:0 auto 2em;">
+        <div class="conclusion-item anim-item"><span class="conclusion-check">✅</span><span class="conclusion-text">API RESTful completa com arquitetura profissional</span></div>
+        <div class="conclusion-item anim-item"><span class="conclusion-check">✅</span><span class="conclusion-text">Segurança em múltiplas camadas</span></div>
+        <div class="conclusion-item anim-item"><span class="conclusion-check">✅</span><span class="conclusion-text">Cobertura de testes unitários e E2E</span></div>
+        <div class="conclusion-item anim-item"><span class="conclusion-check">✅</span><span class="conclusion-text">Containerização pronta para deploy</span></div>
+        <div class="conclusion-item anim-item"><span class="conclusion-check">✅</span><span class="conclusion-text">Documentação completa (README + Funcional + Swagger)</span></div>
+      </div>
+      <div class="anim-item"><div class="questions-badge">Perguntas?</div></div>
+      <div class="footer-text anim-item">AquaSchedule — Última Sprint Ford Enter</div>
+    </div>
+    <div class="waves-container">
+      <div class="wave"></div>
+      <div class="wave"></div>
+      <div class="wave"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     JAVASCRIPT
+     ═══════════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+  'use strict';
+
+  // ── Elements ──
+  const slides = document.querySelectorAll('.slide');
+  const progressBar = document.getElementById('progress-bar');
+  const slideCounter = document.getElementById('slide-counter');
+  const navDots = document.getElementById('nav-dots');
+  const prevBtn = document.getElementById('prev-btn');
+  const nextBtn = document.getElementById('next-btn');
+
+  const totalSlides = slides.length;
+  let currentSlide = 0;
+
+  // ── Create nav dots ──
+  slides.forEach((_, i) => {
+    const dot = document.createElement('button');
+    dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    dot.setAttribute('aria-label', `Slide ${i + 1}`);
+    dot.addEventListener('click', () => goToSlide(i));
+    navDots.appendChild(dot);
+  });
+
+  // ── Create floating particles for cover ──
+  const particlesContainer = document.getElementById('particles');
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.width = p.style.height = (Math.random() * 4 + 2) + 'px';
+    p.style.animationDuration = (Math.random() * 12 + 8) + 's';
+    p.style.animationDelay = (Math.random() * 10) + 's';
+    p.style.opacity = 0;
+    particlesContainer.appendChild(p);
+  }
+
+  // ── Navigate ──
+  function goToSlide(index) {
+    if (index < 0 || index >= totalSlides || index === currentSlide) return;
+
+    const prev = slides[currentSlide];
+    const next = slides[index];
+
+    // Determine direction
+    const goingForward = index > currentSlide;
+
+    // Remove previous states
+    prev.classList.remove('active');
+    prev.classList.add('exit-left');
+    setTimeout(() => prev.classList.remove('exit-left'), 600);
+
+    // Set entry direction
+    if (!goingForward) {
+      next.style.transform = 'translateX(-40px)';
+    } else {
+      next.style.transform = 'translateX(40px)';
+    }
+
+    // Activate
+    requestAnimationFrame(() => {
+      next.classList.add('active');
+    });
+
+    currentSlide = index;
+    updateUI();
+  }
+
+  function updateUI() {
+    // Progress
+    const progress = ((currentSlide) / (totalSlides - 1)) * 100;
+    progressBar.style.width = progress + '%';
+
+    // Counter
+    slideCounter.textContent = `${currentSlide + 1} / ${totalSlides}`;
+
+    // Dots
+    const dots = navDots.querySelectorAll('.nav-dot');
+    dots.forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+
+    // Arrow visibility
+    prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '';
+    nextBtn.style.opacity = currentSlide === totalSlides - 1 ? '0.2' : '';
+  }
+
+  // ── Keyboard navigation ──
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault();
+      goToSlide(currentSlide + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      goToSlide(currentSlide - 1);
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      goToSlide(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      goToSlide(totalSlides - 1);
+    }
+  });
+
+  // ── Button navigation ──
+  prevBtn.addEventListener('click', () => goToSlide(currentSlide - 1));
+  nextBtn.addEventListener('click', () => goToSlide(currentSlide + 1));
+
+  // ── Touch/Swipe support ──
+  let touchStartX = 0;
+  let touchStartY = 0;
+  document.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].screenX - touchStartX;
+    const dy = e.changedTouches[0].screenY - touchStartY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      if (dx < 0) goToSlide(currentSlide + 1);
+      else goToSlide(currentSlide - 1);
+    }
+  }, { passive: true });
+
+  // ── Init ──
+  updateUI();
+
+})();
+</script>
+</body>
+</html>

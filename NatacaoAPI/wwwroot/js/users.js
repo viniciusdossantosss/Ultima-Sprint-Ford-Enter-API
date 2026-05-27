@@ -226,6 +226,7 @@ export async function editUsuario(id) {
         if (window.bootstrap) {
             const modalEl = document.getElementById('usuarioModal');
             const modal = window.bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal._relatedTarget = null; // Limpa para não confundir com clique do botão "Novo Usuário"
             modal.show();
         }
     } catch (err) { 
